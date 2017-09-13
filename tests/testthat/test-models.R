@@ -21,25 +21,28 @@ trans_lmm_obj <- .make_spec_trans_lmm(response = "Petal.Length",
                                     controls = "Petal.Width",
                                     rands = "Species",
                                     trans = "log10")
+lmm_only_rands <- .make_spec_lmm(response = "Petal.Length", controls = "Petal.Width",
+                                 rands = "Species", trans = "identity")
 
 m_lm <- fit_model(lm_obj, iris)
 m_lmm <- fit_model(lmm_obj, iris)
 m_logreg <- fit_model(logreg_obj, iris)
 m_trans_lm <- fit_model(trans_lm_obj, iris)
 m_trans_lmm <- fit_model(trans_lmm_obj, iris)
+m_only_rands <- fit_model(lmm_only_rands, iris)
 
 test_that("confidence methods", {
-  expect_s3_class(confidence(m_lm, 0.05), "tbl_df")
-  expect_s3_class(confidence(m_lmm, 0.05), "tbl_df")
-  expect_s3_class(confidence(m_logreg, 0.05), "tbl_df")
-  expect_s3_class(confidence(m_trans_lm, 0.05), "tbl_df")
-  expect_s3_class(confidence(m_trans_lmm, 0.05), "tbl_df")
+  expect_s3_class(confidence(m_lm, 0.95), "tbl_df")
+  expect_s3_class(confidence(m_lmm, 0.95), "tbl_df")
+  expect_s3_class(confidence(m_logreg, 0.95), "tbl_df")
+  expect_s3_class(confidence(m_trans_lm, 0.95), "tbl_df")
+  expect_s3_class(confidence(m_trans_lmm, 0.95), "tbl_df")
 
-  expect_equal(nrow(confidence(m_lm, 0.05)), 2)
-  expect_equal(nrow(confidence(m_lmm, 0.05)), 1)
-  expect_equal(nrow(confidence(m_trans_lm, 0.05)), 1)
-  expect_equal(nrow(confidence(m_trans_lmm, 0.05)), 1)
-  expect_equal(nrow(confidence(m_logreg, 0.05)), 1)
+  expect_equal(nrow(confidence(m_lm, 0.95)), 2)
+  expect_equal(nrow(confidence(m_lmm, 0.95)), 1)
+  expect_equal(nrow(confidence(m_trans_lm, 0.95)), 1)
+  expect_equal(nrow(confidence(m_trans_lmm, 0.95)), 1)
+  expect_equal(nrow(confidence(m_logreg, 0.95)), 1)
 })
 
 

@@ -22,6 +22,12 @@ get_slots <- function(fam, slot) {
   unique(unlist(map(fam, slot)))
 }
 
+all_has_treatments <- function(fam) {
+  if (is.null(unlist(map(fam, "treatment")))) {
+    stop("All model objects must have treatments for this function")
+  }
+}
+
 inv <- function(trans) {
   switch(trans,
          identity = function(x) identity(x),
@@ -29,6 +35,9 @@ inv <- function(trans) {
          log10 = function(x) 10^x)
 }
 
+is_empty <- function(x) {
+  length(x) == 0
+}
 name_fam <- function(spec_frame) {
   paste0(spec_frame[["response"]], "_", spec_frame[["treatment"]])
 }
@@ -50,9 +59,21 @@ setup_lrt_tib <- function(obj, p) {
          p = p)
 }
 
-setup_confint_tib <- function(object, est, inv_trans, level) {
-  confs <- warn(confint(object@fit, parm = object@trt_levels, level = level, quiet = TRUE), object)
-  confs <- inv_trans(confs)
+simplify_col_sel <- function(mat) {
+  if (is.vector(mat)) {
+    lower <- mat[1]
+    higher <- mat[2]
+  } else {
+    lower <- mat[, 1]
+    higher <- mat[, 2]
+  }
+  list(lower = lower, higher = higher)
+}
+
+# object@trt_levels
+setup_confint_tib <- function(object, est, inv_trans, parm, level) {
+  confs <- warn(confint(object@fit, parm = parm, level = level, quiet = TRUE), object)
+  confs[object@trt_levels,] <- inv_trans(confs[object@trt_levels, ])
   if (is.vector(confs)) {
     lower <- confs[1]
     higher <- confs[2]
@@ -75,21 +96,10 @@ setup_test_tib <- function(obj, p) {
          p = p)
 }
 
-warn <- function(expr, object) {
+warn <- function(expr, object, activity) {
   withCallingHandlers(expr, warning = function(w) {
-    str <- c("Object of class", class(object), "with response",
+    str <- c("During", activity, "Object of class", class(object), "with response",
              object@response, "and treatment", object@treatment,
-             "was involved in warning: \n", conditionMessage(w), "\n")
-    cat(str)
-    invokeRestart("muffleWarning")
-  })
-}
-
-warn_null <- function(expr, obj) {
-  withCallingHandlers(expr, warning = function(w) {
-    str <- c("During fitting of the null model, the object of class",
-             class(object), "with response", object@response,
-             "and treatment", object@treatment,
              "was involved in warning: \n", conditionMessage(w), "\n")
     cat(str)
     invokeRestart("muffleWarning")

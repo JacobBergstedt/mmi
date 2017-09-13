@@ -39,9 +39,8 @@ NULL
 #'@param trans Are the response variables transformed?
 #'@param rands Possible random effects shared by the response variables.
 #'@export
-specify <- function(responses, treatments, controls = character(0), model = NULL,
-                    trans = NULL, rands = NULL) {
-
+specify <- function(responses, treatments = character(0), controls = character(0),
+                    model = NULL, trans = NULL, rands = NULL) {
   if (!is.null(model)) {
     if (!model %in% c("lm", "lmm", "trans_lm", "trans_lmm", "logreg")) stop("Not a valid model name")
     if (model == "lm" & !is.null(rands)) stop("lm should not have random effects")
@@ -59,15 +58,19 @@ specify <- function(responses, treatments, controls = character(0), model = NULL
                     trans_lm = stop("transformation specifications must have a specified transformation"),
                     trans_lmm = stop("transformation specifications must have a specified transformation"))
   }
-  spec_frame <- expand.grid(response = responses, treatment = treatments,
+  if (!is_empty(treatments)) {
+    spec_frame <- expand.grid(response = responses, treatment = treatments,
                             stringsAsFactors = FALSE)
+  } else {
+    spec_frame <- data.frame(response = responses, stringsAsFactors = FALSE)
+  }
   spec_fam <- vector(mode = "list", length = nrow(spec_frame))
   spec_fam <- .make_spec_fam(spec_fam, responses = responses, treatments = treatments)
   for (i in seq_len(nrow(spec_frame))) {
     spec_obj <- .make_spec(response = spec_frame[i, 1],
-                           treatment = spec_frame[i, 2],
+                           treatment = as.character(spec_frame[i, 2]),
                            controls = base::setdiff(controls,
-                                                    c(spec_frame[i, 1], spec_frame[i, 2])),
+                                                    c(spec_frame[i, 1], as.character(spec_frame[i, 2]))),
                            trans = trans)
     spec_fam[[i]] <- switch(model,
                             lm = .make_spec_lm(spec_obj),
@@ -79,6 +82,7 @@ specify <- function(responses, treatments, controls = character(0), model = NULL
   names(spec_fam) <- name_fam(spec_frame)
   spec_fam
 }
+
 
 #' @export
 specify_with_list <- function(spec_list) {
@@ -202,6 +206,7 @@ confidence.fam <- function(object, level = 0.95) {
 #' constructs a tibble with the p-value of the test included, and then binds the tibbles together.
 #' @export
 test.fam <- function(object) {
+  all_has_treatments(object)
   tib <- purrr::map_dfr(object, test)
   tib$FDR <- stats::p.adjust(tib$p, "fdr")
   tib
@@ -213,6 +218,7 @@ test.fam <- function(object) {
 #' level.
 #' @export
 lrt.fam <- function(object) {
+  all_has_treatments(object)
   tib <- purrr::map_dfr(object, lrt)
   tib$FDR <- stats::p.adjust(tib$p, "fdr")
   tib
@@ -220,9 +226,15 @@ lrt.fam <- function(object) {
 
 #' @export
 ft.fam <- function(object) {
+  all_has_treatments(object)
   tib <- purrr::map_dfr(object, ft)
   tib$FDR <- stats::p.adjust(tib$p, "fdr")
   tib
+}
+
+#' @export
+prop_var.fam <- function(object) {
+  purrr::map_dfr(object, prop_var)
 }
 
 #' Calculates FCR adjusted confidence intervals

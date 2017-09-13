@@ -2,7 +2,6 @@
 NULL
 
 # mmi_model classes -------------------------------------------------------
-
 .make_model <- setClass("mmi_model",
                         slots = c(trt_levels = "character",
                                   formula = "formula",
@@ -82,17 +81,41 @@ confidence.mmi_lm <- function(object, level) {
 confidence.mmi_logreg <- function(object, level) {
   inv_trans <- inv(object@trans)
   est <- coef(object@fit)[object@trt_levels]
-  setup_confint_tib(object, est, inv_trans, level)
+  confs <- confint(object@fit, parm = object@trt_levels, level = level)
+  confs <- inv_trans(confs)
+  if (is.vector(confs)) {
+    lower <- confs[1]
+    higher <- confs[2]
+  } else {
+    lower <- confs[, 1]
+    higher <- confs[, 2]
+  }
+  tibble(response = object@response,
+         treatment = object@treatment,
+         treatment_levels = object@trt_levels,
+         est = inv_trans(est),
+         lower = lower,
+         higher = higher)
 }
 
 #' @describeIn confidence
 #' Computes the confidence interval using profile likelihood (the confint method)
 #' and sets up a tidy tibble with the information.
 #' @export
-confidence.mmi_lmm <- function(object, level) {
+confidence.mmi_lmm <- function(object, level, also_random_effects = FALSE) {
   inv_trans <- inv(object@trans)
-  est <- lme4::fixef(object@fit)[object@trt_levels]
-  setup_confint_tib(object, est, inv_trans, level)
+  est <- inv_trans(lme4::fixef(object@fit)[object@trt_levels])
+  confs <- warn(confint(object@fit, parm = object@trt_levels, level = level, quiet = TRUE),
+                object,
+                "estimation of confidence intervals")
+  confs[object@trt_levels, ] <- inv_trans(confs[object@trt_levels, ])
+  confs <- simplify_col_sel(confs)
+  tibble(response = object@response,
+         treatment = object@treatment,
+         treatment_levels = object@trt_levels,
+         est = est,
+         lower = confs$lower,
+         higher = confs$higher)
 }
 
 #  S3 generic method test --------------------------------------------------------------
@@ -124,7 +147,9 @@ test.mmi_lm <- function(object) {
 #' Performs an lrt and setups a tidy tibble with the information.
 #' @export
 test.mmi_lmm <- function(object) {
-  null <- lme4::lmer(object@null_formula, object@fit@frame)
+  null <- warn(lme4::lmer(object@null_formula, object@fit@frame),
+               object,
+               "fitting of null model")
   p <- pbkrtest::KRmodcomp(object@fit, null)$stats$p.value
   setup_test_tib(object, p)
 }
@@ -184,4 +209,17 @@ ft.mmi_lmm <- function(object) {
   tib <- test.mmi_lmm(object)
   tib$treatment_levels <- NULL
   tib[1, ]
+}
+
+#' @export
+prop_var <- function(object) UseMethod("prop_var")
+
+#' @export
+prop_var.mmi_lmm <- function(object) {
+  est <- as.data.frame(lme4::VarCorr(object@fit))[c("grp", "vcov")]
+  res_var <- est$vcov[est$grp == "Residual"]
+  est <- dplyr::left_join(tibble(grp = object@rands), est, by = "grp")
+  tibble(response = object@response,
+         random_effects = object@rands,
+         prop_var = 100 * est$vcov / c(est$vcov + res_var))
 }

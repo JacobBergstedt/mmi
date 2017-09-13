@@ -183,14 +183,18 @@ get_trt_levels.spec <- function(object, fit) {
 }
 
 get_trt_levels.spec_lmm <- function(object, fit) {
-  mf <- fit@frame
-  trt <- mf[[object@treatment]]
-  if (!class(trt) %in% c("character", "logical", "factor")) {
-    object@treatment
-  } else if (is.factor(trt)) {
-    paste0(object@treatment, levels(trt)[-1])
+  if (!is_empty(object@treatment)) {
+    mf <- fit@frame
+    trt <- mf[[object@treatment]]
+    if (!class(trt) %in% c("character", "logical", "factor")) {
+      object@treatment
+    } else if (is.factor(trt)) {
+      paste0(object@treatment, levels(trt)[-1])
+    } else {
+      paste0(object@treatment, levels(factor(trt))[-1])
+    }
   } else {
-    paste0(object@treatment, levels(factor(trt))[-1])
+    character(0)
   }
 }
 
@@ -241,7 +245,8 @@ fit_model.spec_logreg <- function(object, study_frame) {
 #' @export
 fit_model.spec_lmm <- function(object, study_frame) {
   fm <- get_formula(object)
-  fit <- warn(lme4::lmer(fm, study_frame), object)
+  fit <- warn(lme4::lmer(fm, study_frame), object,
+              "fitting of model")
   trt_levels <- get_trt_levels(object, fit)
   .make_lmm(object, fit = fit, trt_levels = trt_levels,
             formula = fm,

@@ -4,8 +4,8 @@
 \alias{specify}
 \title{Constructs a list of model specifications from variable names.}
 \usage{
-specify(responses, treatments, controls = character(0), model = NULL,
-  trans = NULL, rands = NULL)
+specify(responses, treatments = character(0), controls = character(0),
+  model = NULL, trans = NULL, rands = NULL)
 }
 \arguments{
 \item{responses}{Character vector of response variables.}
