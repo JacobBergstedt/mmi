@@ -1,8 +1,8 @@
 test_package <- function() {
   load("~/FACS_GWAS/Rdata/globals.RData")
   mi <- readRDS("~/FACS_GWAS/Rdata/snp_ecrf_facs.rds")
-  n <- 50
-  p <- specify(responses = G.annotation$FACS.NAME[1:n], treatments = G.treatments[1:10], controls = "Age",
+  p <- specify(responses = G.annotation$FACS.NAME, treatments = G.treatments,
+               controls = "Age",
                rands = "DayOfSampling", model = "lmm", trans = "log")
   t <- Sys.time()
   o <- make_fam(p, mi, par = TRUE)
