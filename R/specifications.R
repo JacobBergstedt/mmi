@@ -232,7 +232,7 @@ fit_model.spec_lm <- function(object, study_frame){
 #' @export
 fit_model.spec_logreg <- function(object, study_frame) {
   fm <- get_formula(object)
-  fit <- warn(glm(fm, study_frame, family = "binomial"), object)
+  fit <- warn(glm(fm, study_frame, family = "binomial"), object, activity = "fitting of model")
   trt_levels <- get_trt_levels(object, fit)
   .make_logreg(object, fit = fit, trt_levels = trt_levels,
                formula = fm,

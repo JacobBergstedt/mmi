@@ -124,8 +124,16 @@ specify_with_list <- function(spec_list) {
 #' @param study_frame The data to be investigated. Must include all response, treatment and
 #' control variables in the specification family.
 #' @export
-make_fam <- function(spec_fam, study_frame) {
-  fam <- map(spec_fam, fit_model, study_frame = study_frame)
+make_fam <- function(spec_fam, study_frame, par) {
+  if (!par) {
+    fam <- map(spec_fam, fit_model, study_frame = study_frame)
+  }
+  else {
+    cl <- parallel::makeCluster(parallel::detectCores() - 1)
+    parallel::clusterExport(cl, varlist = c("study_frame"), envir = environment())
+    fam <- parallel::parLapply(cl, spec_fam, fun = function(x) fit_model(x, study_frame))
+    parallel::stopCluster(cl)
+  }
   .make_fam(fam, responses = spec_fam@responses, treatments = spec_fam@treatments)
 }
 
@@ -259,7 +267,6 @@ select_confidence <- function(fam, test_tib, crit = "FDR", thresh = 0.05, level 
   ntot <- nrow(test_tib)
   test_tib <- test_tib[test_tib[[crit]] < thresh, c("response", "treatment")]
   nhits <- nrow(test_tib)
-  to_select <- logical(length(fam))
   selected_models <- name_fam(test_tib)
   fcr_alpha <- (1 - level) * nhits / ntot
   tib <- confidence(fam[names(fam) %in% selected_models], level = 1 - fcr_alpha)

@@ -1,9 +1,15 @@
 test_package <- function() {
-  load("/work/jacoba/TREC/Data/trec.data.RData")
-  n <- 10
-p <- specify(responses = G.facs[1:n], treatments = G.treatments[1:n], controls = "Age",
-               model = "trans", trans = "log")
-  o <- make_fam(p, mi)
+  load("~/FACS_GWAS/Rdata/globals.RData")
+  mi <- readRDS("~/FACS_GWAS/Rdata/snp_ecrf_facs.rds")
+  n <- 50
+  p <- specify(responses = G.annotation$FACS.NAME[1:n], treatments = G.treatments[1:10], controls = "Age",
+               rands = "DayOfSampling", model = "lmm", trans = "log")
+  t <- Sys.time()
+  o <- make_fam(p, mi, par = TRUE)
+  print(Sys.time() - t)
+  t <- Sys.time()
+  o <- make_fam(p, mi, par = FALSE)
+  print(Sys.time() - t)
   list(o = o, p = p)
 }
 
