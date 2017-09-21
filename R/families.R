@@ -257,7 +257,7 @@ confidence.spec_fam <- function(object, level = 0.95, study_frame, nr_cores = 1)
       fit_and_get_confs(x, level = level, study_frame = study_frame)
     })
     parallel::stopCluster(cl)
-    rbind(cis)
+    dplyr::bind_rows(cis)
   }
 }
 
@@ -275,7 +275,7 @@ test.spec_fam <- function(object, study_frame, nr_cores = 1) {
       fit_and_get_tests(x, study_frame = study_frame)
     })
     parallel::stopCluster(cl)
-    rbind(hyps)
+    dplyr::bind_rows(hyps)
   }
 }
 
@@ -312,4 +312,3 @@ select_confidence <- function(fam, test_tib, crit = "FDR", thresh = 0.05, level 
   names(tib)[names(tib) == "higher"] <- "FCR_higher"
   tib
 }
-
