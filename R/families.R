@@ -124,16 +124,8 @@ specify_with_list <- function(spec_list) {
 #' @param study_frame The data to be investigated. Must include all response, treatment and
 #' control variables in the specification family.
 #' @export
-make_fam <- function(spec_fam, study_frame, par) {
-  if (!par) {
-    fam <- map(spec_fam, fit_model, study_frame = study_frame)
-  }
-  else {
-    cl <- parallel::makeCluster(parallel::detectCores() - 1)
-    parallel::clusterExport(cl, varlist = c("study_frame"), envir = environment())
-    fam <- parallel::parLapply(cl, spec_fam, fun = function(x) fit_model(x, study_frame))
-    parallel::stopCluster(cl)
-  }
+make_fam <- function(spec_fam, study_frame) {
+  fam <- map(spec_fam, fit_model, study_frame = study_frame)
   .make_fam(fam, responses = spec_fam@responses, treatments = spec_fam@treatments)
 }
 
@@ -181,6 +173,7 @@ c.fam <- function(...) {
 }
 
 # Subset methods ----------------------------------------------------------------------
+
 #' @export
 `[.spec_fam` <- function(x, idx, ...) {
   if (is.character(idx)) {
@@ -201,12 +194,16 @@ c.fam <- function(...) {
   .make_fam(NextMethod())
 }
 
+
+
+# Fam inference methods -------------------------------------------------------------
+
 #' @describeIn confidence
 #' Maps over the family, constructs a confidence interval for each model object using the
 #' corresponding S3 method, and the binds the information together in a tidy way.
 #' @export
 confidence.fam <- function(object, level = 0.95) {
-  purrr::map_dfr(object, confidence, level = level)
+    purrr::map_dfr(object, confidence, level = level)
 }
 
 #' @describeIn test
@@ -244,6 +241,27 @@ ft.fam <- function(object) {
 prop_var.fam <- function(object) {
   purrr::map_dfr(object, prop_var)
 }
+
+
+# Inference methods for spec_fam -----------------------------------------------------
+confidence.spec_fam <- function(object, level = 0.95, study_frame, nr_cores = 1) {
+  fit_and_get_confs <- function(spec, level = 0.95, study_frame) {
+    confidence(fit_model(spec, study_frame), level = 0.95)
+  }
+  if (nr_cores == 1) {
+    purrr::map_dfr(object, fit_and_get_confs, level = level, study_frame = study_frame)
+  } else {
+    cl <- parallel::makePSOCKcluster(nr_cores)
+    parallel::clusterExport(cl, c("level", "study_frame"), envir = environment())
+    parallel::parLapply(cl, object, function(x) fit_and_get_confs(x, level = level,
+                                                                  study_frame = study_frame))
+    parallel::stopCluster(cl)
+  }
+}
+
+
+# FCR function ----------------------------------------------------------------------
+
 
 #' Calculates FCR adjusted confidence intervals
 #'

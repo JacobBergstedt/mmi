@@ -8,13 +8,13 @@
 \alias{confidence.fam}
 \title{Generic method to compute confidence regions for mmi model and family objects.}
 \usage{
-confidence(object, level)
+confidence(object, level, ...)
 
-\method{confidence}{mmi_lm}(object, level)
+\method{confidence}{mmi_lm}(object, level, ...)
 
-\method{confidence}{mmi_logreg}(object, level)
+\method{confidence}{mmi_logreg}(object, level, ...)
 
-\method{confidence}{mmi_lmm}(object, level, also_random_effects = FALSE)
+\method{confidence}{mmi_lmm}(object, level, ...)
 
 \method{confidence}{fam}(object, level = 0.95)
 }

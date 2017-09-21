@@ -1,16 +1,13 @@
-test_package <- function() {
+test_package <- function(nr_cores) {
   load("~/FACS_GWAS/Rdata/globals.RData")
   mi <- readRDS("~/FACS_GWAS/Rdata/snp_ecrf_facs.rds")
   p <- specify(responses = G.annotation$FACS.NAME, treatments = G.treatments,
                controls = "Age",
                rands = "DayOfSampling", model = "lmm", trans = "log")
   t <- Sys.time()
-  o <- make_fam(p, mi, par = TRUE)
-  print(Sys.time() - t)
-  t <- Sys.time()
-  o <- make_fam(p, mi, par = FALSE)
-  print(Sys.time() - t)
-  list(o = o, p = p)
+  p <- confidence(p, 0.95, study_frame = mi, nr_cores = nr_cores)
+  print(Sys.time - t)
+  p
 }
 
 default_control <- function() {

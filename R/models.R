@@ -54,7 +54,7 @@ NULL
 #' @param object Either a mmi model object or a mmi family object.
 #' @param level The confidence level.
 #' @export
-confidence <- function(object, level) {
+confidence <- function(object, level, ...) {
   UseMethod("confidence")
 }
 
@@ -102,7 +102,7 @@ confidence.mmi_logreg <- function(object, level) {
 #' Computes the confidence interval using profile likelihood (the confint method)
 #' and sets up a tidy tibble with the information.
 #' @export
-confidence.mmi_lmm <- function(object, level, also_random_effects = FALSE) {
+confidence.mmi_lmm <- function(object, level) {
   inv_trans <- inv(object@trans)
   est <- inv_trans(lme4::fixef(object@fit)[object@trt_levels])
   confs <- warn(confint(object@fit, parm = object@trt_levels, level = level, quiet = TRUE),

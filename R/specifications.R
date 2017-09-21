@@ -248,7 +248,8 @@ fit_model.spec_lmm <- function(object, study_frame) {
   fit <- warn(lme4::lmer(fm, study_frame), object,
               "fitting of model")
   trt_levels <- get_trt_levels(object, fit)
-  .make_lmm(object, fit = fit, trt_levels = trt_levels,
+  .make_lmm(object, fit = fit,
+            trt_levels = trt_levels,
             formula = fm,
             null_formula = get_null_formula(object))
 }
