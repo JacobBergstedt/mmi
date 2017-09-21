@@ -5,12 +5,12 @@ test_package <- function(nr_cores) {
                controls = "Age",
                rands = "DayOfSampling", model = "lmm", trans = "log")
   t <- Sys.time()
-  p <- confidence(p, 0.95, study_frame = mi, nr_cores = nr_cores)
+  ci <- confidence(p, 0.95, study_frame = mi, nr_cores = nr_cores)
   print(Sys.time() - t)
   t <- Sys.time()
-  p <- hyp(p, study_frame = mi, nr_cores = nr_cores)
+  hyp <- test(p, study_frame = mi, nr_cores = nr_cores)
   print(Sys.time() - t)
-  p
+  list(ci = ci, hyp = hyp)
 }
 
 default_control <- function() {

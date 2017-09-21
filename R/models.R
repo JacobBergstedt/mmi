@@ -130,7 +130,7 @@ confidence.mmi_lmm <- function(object, level) {
 #' The FDR-adjusted significance level is also calculated and added to the tibble.
 #' @param object An mmi model object.
 #' @export
-test <- function(object) UseMethod("test")
+test <- function(object, ...) UseMethod("test")
 
 #' @describeIn test
 #' Performs a t-test with the sandwiched-estimated standard errors and sets up a tidy tibble
