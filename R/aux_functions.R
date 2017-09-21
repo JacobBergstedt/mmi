@@ -6,7 +6,7 @@ test_package <- function(nr_cores) {
                rands = "DayOfSampling", model = "lmm", trans = "log")
   t <- Sys.time()
   p <- confidence(p, 0.95, study_frame = mi, nr_cores = nr_cores)
-  print(Sys.time - t)
+  print(Sys.time() - t)
   p
 }
 
