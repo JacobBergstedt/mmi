@@ -104,7 +104,7 @@ confidence.mmi_logreg <- function(object, level) {
 #' @export
 confidence.mmi_lmm <- function(object, level) {
   inv_trans <- inv(object@trans)
-  est <- inv_trans(lme4::fixef(object@fit)[object@trt_levels])
+  est <- inv_trans(fixef(object@fit)[object@trt_levels])
   confs <- warn(confint(object@fit, parm = object@trt_levels, level = level, quiet = TRUE),
                 object,
                 "estimation of confidence intervals")
@@ -147,10 +147,10 @@ test.mmi_lm <- function(object) {
 #' Performs an lrt and setups a tidy tibble with the information.
 #' @export
 test.mmi_lmm <- function(object) {
-  null <- warn(lme4::lmer(object@null_formula, object@fit@frame),
+  null <- warn(lmer(object@null_formula, object@fit@frame),
                object,
                "fitting of null model")
-  p <- pbkrtest::KRmodcomp(object@fit, null)$stats$p.value
+  p <- KRmodcomp(object@fit, null)$stats$p.value
   setup_test_tib(object, p)
 }
 
@@ -187,8 +187,8 @@ lrt.mmi_lm <- function(object) {
 #' a tidy tibble for the result.
 #' @export
 lrt.mmi_lmm <- function(object) {
-  ll_null <- logLik(lme4::lmer(object@null_formula, object@fit@frame, REML = FALSE))
-  ll_alt <- logLik(lme4::refitML(object@fit))
+  ll_null <- logLik(lmer(object@null_formula, object@fit@frame, REML = FALSE))
+  ll_alt <- logLik(refitML(object@fit))
   setup_lrt_tib(object, p_lrt(ll_null, ll_alt))
 }
 
@@ -218,8 +218,10 @@ prop_var <- function(object) UseMethod("prop_var")
 prop_var.mmi_lmm <- function(object) {
   est <- as.data.frame(lme4::VarCorr(object@fit))[c("grp", "vcov")]
   res_var <- est$vcov[est$grp == "Residual"]
-  est <- dplyr::left_join(tibble(grp = object@rands), est, by = "grp")
+  est <- left_join(tibble(grp = object@rands), est, by = "grp")
   tibble(response = object@response,
          random_effects = object@rands,
          prop_var = 100 * est$vcov / c(est$vcov + res_var))
 }
+
+

@@ -10,11 +10,11 @@
 \usage{
 confidence(object, level, ...)
 
-\method{confidence}{mmi_lm}(object, level, ...)
+\method{confidence}{mmi_lm}(object, level)
 
-\method{confidence}{mmi_logreg}(object, level, ...)
+\method{confidence}{mmi_logreg}(object, level)
 
-\method{confidence}{mmi_lmm}(object, level, ...)
+\method{confidence}{mmi_lmm}(object, level)
 
 \method{confidence}{fam}(object, level = 0.95)
 }

@@ -244,44 +244,72 @@ prop_var.fam <- function(object) {
 
 
 # Inference methods for spec_fam -----------------------------------------------------
+#' @export
 confidence.spec_fam <- function(object, level = 0.95, study_frame, nr_cores = 1) {
   fit_and_get_confs <- function(spec, level = 0.95, study_frame) {
-    confidence(fit_model(spec, study_frame), level = 0.95)
+    confidence(fit_model(spec, study_frame), level = level)
   }
   if (nr_cores == 1) {
     purrr::map_dfr(object, fit_and_get_confs, level = level, study_frame = study_frame)
   } else {
     cl <- parallel::makePSOCKcluster(nr_cores)
     parallel::clusterExport(cl, c("level", "study_frame"), envir = environment())
-    cis <- parallel::parLapply(cl, object, function(x) {
+    tib <- parallel::parLapply(cl, object, function(x) {
       fit_and_get_confs(x, level = level, study_frame = study_frame)
     })
     parallel::stopCluster(cl)
-    dplyr::bind_rows(cis)
+    dplyr::bind_rows(tib)
   }
 }
 
+#' @export
 test.spec_fam <- function(object, study_frame, nr_cores = 1) {
   all_has_treatments(object)
   fit_and_get_tests <- function(spec, study_frame) {
     test(fit_model(spec, study_frame))
   }
   if (nr_cores == 1) {
-    purrr::map_dfr(object, fit_and_get_tests, level = level, study_frame = study_frame)
+    tib <- purrr::map_dfr(object, fit_and_get_tests, level = level,
+                          study_frame = study_frame)
   } else {
     cl <- parallel::makePSOCKcluster(nr_cores)
     parallel::clusterExport(cl, c("study_frame"), envir = environment())
-    hyps <- parallel::parLapply(cl, object, function(x) {
+    tib <- parallel::parLapply(cl, object, function(x) {
       fit_and_get_tests(x, study_frame = study_frame)
     })
     parallel::stopCluster(cl)
-    dplyr::bind_rows(hyps)
+    tib <- dplyr::bind_rows(tib)
+  }
+  tib$FDR <- stats::p.adjust(tib$p, "fdr")
+  tib
+}
+
+#' @export
+inference <- function(object, study_frame, level, ...) {UseMethod("inference")}
+
+#' @export
+inference.spec_fam <- function(object, study_frame, level, nr_cores = 1) {
+  all_has_treatments(object)
+  fit_and_get_inference_results <- function(spec, study_frame, level) {
+    m <- fit_model(spec, study_frame)
+    left_join(confidence(m, level = level), test(m))
+  }
+  if (nr_cores == 1) {
+    purrr::map_dfr(object, fit_and_get_inference_results, level = level,
+                   study_frame = study_frame)
+  } else {
+    cl <- parallel::makePSOCKcluster(nr_cores)
+    parallel::clusterExport(cl, c("study_frame", "level", "left_join"),
+                            envir = environment())
+    tib <- parallel::parLapply(cl, object, function(x) {
+      fit_and_get_inference_results(x, study_frame = study_frame, level = level)
+    })
+    parallel::stopCluster(cl)
+    dplyr::bind_rows(tib)
   }
 }
 
-
 # FCR function ----------------------------------------------------------------------
-
 
 #' Calculates FCR adjusted confidence intervals
 #'

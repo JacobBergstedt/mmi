@@ -8,7 +8,7 @@
 \alias{test.fam}
 \title{S3 generic method to do hypothesis tests in the mmi model and family objects.}
 \usage{
-test(object)
+test(object, ...)
 
 \method{test}{mmi_lm}(object)
 

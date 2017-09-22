@@ -64,7 +64,8 @@ setMethod("initialize", "spec", function(.Object, ..., trans, treatment, respons
       stop("trans must be identity, log or log10")
     }
   }
-  .Object@controls <- base::setdiff(.Object@controls, c(.Object@treatment, .Object@response))
+  .Object@controls <- base::setdiff(.Object@controls,
+                                    c(.Object@treatment, .Object@response))
   .Object
 })
 
@@ -245,8 +246,7 @@ fit_model.spec_logreg <- function(object, study_frame) {
 #' @export
 fit_model.spec_lmm <- function(object, study_frame) {
   fm <- get_formula(object)
-  fit <- warn(lme4::lmer(fm, study_frame), object,
-              "fitting of model")
+  fit <- warn(lmer(fm, study_frame), object, "fitting of model")
   trt_levels <- get_trt_levels(object, fit)
   .make_lmm(object, fit = fit,
             trt_levels = trt_levels,

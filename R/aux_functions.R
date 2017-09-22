@@ -1,7 +1,7 @@
 test_package <- function(nr_cores) {
   load("~/FACS_GWAS/Rdata/globals.RData")
   mi <- readRDS("~/FACS_GWAS/Rdata/snp_ecrf_facs.rds")
-  p <- specify(responses = G.annotation$FACS.NAME, treatments = G.treatments,
+  p <- specify(responses = G.annotation$FACS.NAME[1:2], treatments = G.treatments,
                controls = "Age",
                rands = "DayOfSampling", model = "lmm", trans = "log")
   t <- Sys.time()
@@ -10,7 +10,10 @@ test_package <- function(nr_cores) {
   t <- Sys.time()
   hyp <- test(p, study_frame = mi, nr_cores = nr_cores)
   print(Sys.time() - t)
-  list(ci = ci, hyp = hyp)
+  t <- Sys.time()
+  res <- inference(p, study_frame = mi, level = 0.95, nr_cores = nr_cores)
+  print(Sys.time() - t)
+  list(ci = ci, hyp = hyp, res)
 }
 
 default_control <- function() {
