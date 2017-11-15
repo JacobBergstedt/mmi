@@ -81,7 +81,7 @@ confidence.mmi_lm <- function(object, level) {
 confidence.mmi_logreg <- function(object, level) {
   inv_trans <- inv(object@trans)
   est <- coef(object@fit)[object@trt_levels]
-  confs <- confint(object@fit, parm = object@trt_levels, level = level)
+  confs <- suppressMessages(confint(object@fit, parm = object@trt_levels, level = level))
   confs <- inv_trans(confs)
   if (is.vector(confs)) {
     lower <- confs[1]
@@ -105,7 +105,7 @@ confidence.mmi_logreg <- function(object, level) {
 confidence.mmi_lmm <- function(object, level) {
   inv_trans <- inv(object@trans)
   est <- inv_trans(fixef(object@fit)[object@trt_levels])
-  confs <- warn(confint(object@fit, parm = object@trt_levels, level = level, quiet = TRUE),
+  confs <- warn(confint.merMod(object@fit, parm = object@trt_levels, level = level, quiet = TRUE),
                 object,
                 "estimation of confidence intervals")
   confs[object@trt_levels, ] <- inv_trans(confs[object@trt_levels, ])
