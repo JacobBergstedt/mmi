@@ -42,7 +42,7 @@ NULL
 specify <- function(responses, treatments = character(0), controls = character(0),
                     model = NULL, trans = NULL, rands = NULL) {
   if (!is.null(model)) {
-    if (!model %in% c("lm", "lmm", "trans_lm", "trans_lmm", "logreg")) stop("Not a valid model name")
+    if (!model %in% c("lm", "lmm", "trans_lm", "trans_lmm", "logreg", "int_lm")) stop("Not a valid model name")
     if (model == "lm" & !is.null(rands)) stop("lm should not have random effects")
     if (model == "lmm" & is.null(rands)) stop("lmm must have random effects")
   }
@@ -55,12 +55,13 @@ specify <- function(responses, treatments = character(0), controls = character(0
                     lm = "identity",
                     lmm = "identity",
                     logreg = "log",
+                    int_lm = "identity",
                     trans_lm = stop("transformation specifications must have a specified transformation"),
                     trans_lmm = stop("transformation specifications must have a specified transformation"))
   }
   if (!is_empty(treatments)) {
     spec_frame <- expand.grid(response = responses, treatment = treatments,
-                            stringsAsFactors = FALSE)
+                              stringsAsFactors = FALSE)
   } else {
     spec_frame <- data.frame(response = responses, stringsAsFactors = FALSE)
   }
@@ -77,7 +78,8 @@ specify <- function(responses, treatments = character(0), controls = character(0
                             lmm = .make_spec_lmm(spec_obj, rands = rands),
                             logreg = .make_spec_logreg(spec_obj),
                             trans_lm = .make_spec_trans_lm(spec_obj),
-                            trans_lmm = .make_spec_trans_lmm(spec_obj, rands = rands))
+                            trans_lmm = .make_spec_trans_lmm(spec_obj, rands = rands),
+                            int_lm = .make_spec_int_lm(spec_obj))
   }
   names(spec_fam) <- name_fam(spec_frame)
   spec_fam
@@ -269,8 +271,7 @@ test.spec_fam <- function(object, study_frame, nr_cores = 1) {
     test(fit_model(spec, study_frame))
   }
   if (nr_cores == 1) {
-    tib <- purrr::map_dfr(object, fit_and_get_tests, level = level,
-                          study_frame = study_frame)
+    tib <- purrr::map_dfr(object, fit_and_get_tests, study_frame = study_frame)
   } else {
     cl <- parallel::makePSOCKcluster(nr_cores)
     parallel::clusterExport(cl, c("study_frame"), envir = environment())
@@ -295,9 +296,11 @@ inference.spec_fam <- function(object, study_frame, level, nr_cores = 1) {
     left_join(confidence(m, level = level), test(m), by = c("response", "treatment"))
   }
   if (nr_cores == 1) {
-    purrr::map_dfr(object, fit_and_get_inference_results, level = level,
+    tib <- purrr::map_dfr(object, fit_and_get_inference_results, level = level,
                    study_frame = study_frame)
-  } else {
+    tib$FDR <- p.adjust(tib$p, "fdr")
+    tib
+    } else {
     cl <- parallel::makePSOCKcluster(nr_cores)
     parallel::clusterExport(cl, c("study_frame", "level", "left_join"),
                             envir = environment())

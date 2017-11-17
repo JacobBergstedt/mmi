@@ -4,7 +4,7 @@
 \name{spec_trans_lmm-class}
 \alias{spec_trans_lmm-class}
 \alias{.make_spec_trans_lmm}
-\title{S4 class "spec_trans_lm_lmm" for linear mixed model with a transformed response.}
+\title{S4 class "spec_trans_lmm" for linear mixed model with a transformed response.}
 \description{
 Using this specification will transformed the response variable.
 For the slots see help for \code{\linkS4class{spec}}.

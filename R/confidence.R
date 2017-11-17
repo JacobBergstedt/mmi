@@ -29,6 +29,7 @@ confidence.mmi_lm <- function(object, level) {
   p_thresh <- qt(1 - alpha, object@fit$df.residual)
   tibble(response = object@response,
          treatment = object@treatment,
+         treatment_levels = object@trt_levels,
          est = inv_trans(mu),
          lower = inv_trans(mu - p_thresh * object@se),
          higher = inv_trans(mu + p_thresh * object@se))

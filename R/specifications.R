@@ -42,12 +42,16 @@
 #'For the slots see help for \code{\linkS4class{spec}}.
 .make_spec_trans_lm <- setClass("spec_trans_lm", contains = "spec_lm")
 
-#'S4 class "spec_trans_lm_lmm" for linear mixed model with a transformed response.
+#'S4 class "spec_trans_lmm" for linear mixed model with a transformed response.
 #'
 #'Using this specification will transformed the response variable.
 #'For the slots see help for \code{\linkS4class{spec}}.
 .make_spec_trans_lmm <- setClass("spec_trans_lmm", contains = "spec_lmm")
 
+#'S4 class "spec_int_lm for a linear model where the treatment is an interaction term
+.make_spec_int_lm <- setClass("spec_int_lm",
+                              slots = "interacting_var",
+                              contains = "spec_lm")
 
 # Initialize methods ------------------------------------------------------------------
 #' S4 initialize method for \code{\linkS4class{spec}}.
@@ -132,6 +136,12 @@ get_formula.spec <- function(object) {
   as.formula(paste0(object@response, " ~ ", paste(covs, collapse = " + ")))
 }
 
+get_formula.spec_int_lm <- function(object) {
+  preds <- paste0(c(object@treatment, object@controls), collapse = " + ")
+  fm <- paste0(object@response, " ~ ", preds)
+  fm <- as.formula(fm)
+}
+
 get_formula.spec_lmm <- function(object) {
   rands <- paste0("(1|", object@rands, ")")
   covs <- c(object@treatment, object@controls, rands)
@@ -148,16 +158,23 @@ get_null_formula <- function(object) {
 }
 
 get_null_formula.spec <- function(object) {
-  response <- paste0(object@response, "~")
+  response <- paste0(object@response, " ~ ")
   covs <- one_if_no_preds(object@controls)
   as.formula(paste0(response, covs))
 }
 
 get_null_formula.spec_lmm <- function(object) {
-  response <- paste0(object@response, "~")
+  response <- paste0(object@response, " ~ ")
   covs <- c(object@controls, paste0("(1|", object@rands, ")"))
-  covs <- paste0(covs, collapse = "+")
+  covs <- paste0(covs, collapse = " + ")
   as.formula(paste0(response, covs))
+}
+
+get_null_formula.spec_int_lm <- function(object) {
+  response <- paste0(object@response, " ~ ")
+  int_vars <- interacting_vars(object@treatment)
+  covs <- c(object@treatment, int_vars$left, int_vars$right)
+  as.formula(paste0(response, paste0(covs, collapse = " + ")))
 }
 
 # get_trt_levels methods --------------------------------------------------------------
@@ -197,6 +214,14 @@ get_trt_levels.spec_lmm <- function(object, fit) {
   } else {
     character(0)
   }
+}
+
+get_trt_levels.spec_int_lm <- function(object, fit) {
+  mf <- fit[["model"]]
+  int_vars <- interacting_vars(object@treatment)
+  left <- paste0(int_vars$left, levels(mf[[int_vars$left]])[-1])
+  right <- paste0(int_vars$right, levels(mf[[int_vars$right]])[-1])
+  paste0(left, ":", right)
 }
 
 # Constructors for the mmi_model objects ----------------------------------
@@ -271,3 +296,4 @@ fit_model.spec_trans_lmm <- function(object, study_frame) {
   study_frame[[object@response]] <- match.fun(object@trans)(study_frame[[object@response]])
   .make_lmm(NextMethod())
 }
+

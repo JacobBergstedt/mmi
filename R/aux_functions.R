@@ -1,20 +1,13 @@
-test_package <- function(nr_cores) {
-  load("~/FACS_GWAS/Rdata/globals.RData")
-  mi <- readRDS("~/FACS_GWAS/Rdata/snp_ecrf_facs.rds")
-  p <- specify(responses = G.annotation$FACS.NAME[1:2], treatments = G.treatments,
-               controls = "Age",
-               rands = "DayOfSampling", model = "lmm", trans = "log")
-  t <- Sys.time()
-  ci <- confidence(p, 0.95, study_frame = mi, nr_cores = nr_cores)
-  print(Sys.time() - t)
-  t <- Sys.time()
-  hyp <- test(p, study_frame = mi, nr_cores = nr_cores)
-  print(Sys.time() - t)
-  t <- Sys.time()
-  res <- inference(p, study_frame = mi, level = 0.95, nr_cores = nr_cores)
-  print(Sys.time() - t)
-  list(ci = ci, hyp = hyp, res)
-}
+# test_package <- function(nr_cores) {
+#   include <- read_delim("~/SEROLOGIES/Data/phenos4rna_x_pheno.csv", delim = ";")
+#   include <- include$FACS.NAME[include$`Include for RNA regression` == "Y"]
+#   seros_1000_db <- readRDS("~/SEROLOGIES/Data/RData/seros_1000_db.rds")
+#   spec <- specify(responses = "ZBTB16",
+#                   treatments = paste0(include, " * ", "CMV"),
+#                   controls = c("Age", "Sex"))
+#   fam <- make_fam(spec, seros_1000_db)
+#   hyp <- test(fam)
+# }
 
 default_control <- function() {
   lme4::lmerControl(optimizer = "nloptwrap",
@@ -37,6 +30,12 @@ all_has_treatments <- function(fam) {
   }
 }
 
+interacting_vars <- function(str) {
+  left <- str_extract(str, "[:graph:]+(?= ?\\* ?)")
+  right <- str_extract(str, "(?<= ?\\* ?)[:graph:]+")
+  list(left = left, right = right)
+}
+
 inv <- function(trans) {
   switch(trans,
          identity = function(x) identity(x),
@@ -47,6 +46,7 @@ inv <- function(trans) {
 is_empty <- function(x) {
   length(x) == 0
 }
+
 name_fam <- function(spec_frame) {
   paste0(spec_frame[["response"]], "_", spec_frame[["treatment"]])
 }
@@ -79,7 +79,6 @@ simplify_col_sel <- function(mat) {
   list(lower = lower, higher = higher)
 }
 
-# object@trt_levels
 setup_confint_tib <- function(object, est, inv_trans, parm, level) {
   confs <- warn(confint(object@fit, parm = parm, level = level, quiet = TRUE), object)
   confs[object@trt_levels,] <- inv_trans(confs[object@trt_levels, ])
