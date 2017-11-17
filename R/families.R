@@ -1,4 +1,4 @@
-#' @include models.R
+#' @include models.R test.R confidence.R AIC.R
 NULL
 
 # Defines the family and spec_fam classes ------------------------------
@@ -292,7 +292,7 @@ inference.spec_fam <- function(object, study_frame, level, nr_cores = 1) {
   all_has_treatments(object)
   fit_and_get_inference_results <- function(spec, study_frame, level) {
     m <- fit_model(spec, study_frame)
-    left_join(confidence(m, level = level), test(m))
+    left_join(confidence(m, level = level), test(m), by = c("response", "treatment"))
   }
   if (nr_cores == 1) {
     purrr::map_dfr(object, fit_and_get_inference_results, level = level,
@@ -305,7 +305,9 @@ inference.spec_fam <- function(object, study_frame, level, nr_cores = 1) {
       fit_and_get_inference_results(x, study_frame = study_frame, level = level)
     })
     parallel::stopCluster(cl)
-    dplyr::bind_rows(tib)
+    tib <- dplyr::bind_rows(tib)
+    tib$FDR <- p.adjust(tib$p, "fdr")
+    tib
   }
 }
 

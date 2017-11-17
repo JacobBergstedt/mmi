@@ -35,7 +35,9 @@ test.mmi_lmm <- function(object) {
                object,
                "fitting of null model")
   p <- KRmodcomp(object@fit, null)$stats$p.value
-  setup_test_tib(object, p)
+  tib <- setup_test_tib(object, p)
+  tib$treatment_levels <- NULL
+  tib
 }
 
 #' @describeIn test
@@ -45,7 +47,9 @@ test.mmi_logreg <- function(object) {
   ll_null <- warn(logLik(glm(object@null_formula, object@fit$model, family = "binomial")),
                   object,
                   "LRT logistic regresion")
-  setup_test_tib(object, p_lrt(ll_null, logLik(object@fit)))
+  tib <- setup_test_tib(object, p_lrt(ll_null, logLik(object@fit)))
+  tib$treatment_levels <- NULL
+  tib
 }
 
 # S3 method lrt        ---------------------------------------------------------------
@@ -66,7 +70,9 @@ lrt <- function(object) UseMethod("lrt")
 #' @export
 lrt.mmi_lm <- function(object) {
   ll_null <- logLik(lm(object@null_formula, object@fit$model))
-  setup_lrt_tib(object, p_lrt(ll_null, logLik(object@fit)))
+  tib <- setup_lrt_tib(object, p_lrt(ll_null, logLik(object@fit)))
+  tib$treatment_levels <- NULL
+  tib
 }
 
 #' Performs a likelihood ratio test for the \linkS4class{lmerMod} in the fit slot and sets up
@@ -75,7 +81,9 @@ lrt.mmi_lm <- function(object) {
 lrt.mmi_lmm <- function(object) {
   ll_null <- logLik(lmer(object@null_formula, object@fit@frame, REML = FALSE))
   ll_alt <- logLik(refitML(object@fit))
-  setup_lrt_tib(object, p_lrt(ll_null, ll_alt))
+  tib <- setup_lrt_tib(object, p_lrt(ll_null, ll_alt))
+  tib$treatment_levels <- NULL
+  tib
 }
 
 #' Performs a likelihood ratio test for the binomial \code{\link[stats]{glm}} in the fit slot
@@ -83,7 +91,6 @@ lrt.mmi_lmm <- function(object) {
 #' @export
 lrt.mmi_logreg <- function(object) {
   tib <- test(object)
-  tib$treatment_levels <- NULL
   tib[1, ]
 }
 
@@ -93,6 +100,5 @@ ft <- function(object) UseMethod("ft")
 #' @export
 ft.mmi_lmm <- function(object) {
   tib <- test.mmi_lmm(object)
-  tib$treatment_levels <- NULL
   tib[1, ]
 }

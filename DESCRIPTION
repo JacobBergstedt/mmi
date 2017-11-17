@@ -20,8 +20,11 @@ Imports:
   methods,
   stats
 Collate: 
-    'aux_functions.R'
     'specifications.R'
+    'AIC.R'
+    'aux_functions.R'
+    'confidence.R'
+    'test.R'
     'models.R'
     'families.R'
     'mmi.R'

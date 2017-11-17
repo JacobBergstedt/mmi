@@ -48,10 +48,10 @@ test_that("confidence methods", {
 
 test_that("test methods", {
   expect_equal(ncol(test(m_lm)), 4)
-  expect_equal(ncol(test(m_lmm)), 4)
-  expect_equal(ncol(test(m_logreg)), 4)
+  expect_equal(ncol(test(m_lmm)), 3)
+  expect_equal(ncol(test(m_logreg)), 3)
   expect_equal(ncol(test(m_trans_lm)), 4)
-  expect_equal(ncol(test(m_trans_lmm)), 4)
+  expect_equal(ncol(test(m_trans_lmm)), 3)
 
   expect_equal(nrow(test(m_lm)),2)
   expect_equal(nrow(test(m_lmm)), 1)
