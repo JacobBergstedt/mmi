@@ -317,7 +317,7 @@ inference.spec_fam <- function(object, study_frame, level, nr_cores = 1) {
 #' @export
 do_fam_inference <- function(spec, data, conf_level = 0.01, selection_thresh = 0.01,
                          selection_conf_level = 0.99) {
-  fam <- make_fam(spec, seros_1000_db)
+  fam <- make_fam(spec, data)
   hyp <- test(fam)
   confs <- confidence(fam, level = 0.99)
   selected_confs <- select_confidence(fam, hyp, thresh = 0.01, level = 0.99)

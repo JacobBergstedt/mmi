@@ -1,12 +1,22 @@
 # test_package <- function(nr_cores) {
-#   include <- read_delim("~/SEROLOGIES/Data/phenos4rna_x_pheno.csv", delim = ";")
-#   include <- include$FACS.NAME[include$`Include for RNA regression` == "Y"]
+#   library(tidyverse)
+#   library(lme4)
+#   library(mmi)
+#   library(parallel)
 #   seros_1000_db <- readRDS("~/SEROLOGIES/Data/RData/seros_1000_db.rds")
-#   spec <- specify(responses = "ZBTB16",
-#                   treatments = paste0(include, " * ", "CMV"),
-#                   controls = c("Age", "Sex"))
-#   fam <- make_fam(spec, seros_1000_db)
-#   hyp <- test(fam)
+#   load("~/SEROLOGIES/Data/RData/globals.RData")
+#   controls_counts <- c("HourOfSampling", "Sex", "Age", "CMV", "Smoking")
+#
+#
+#   spec <- specify(responses = G_facs4ser, treatments = G_serolevels,
+#                   controls = controls_counts, trans = "log",
+#                   model = "lmm", rands = "DayOfSampling")
+#
+#   # spec <- c(spec,
+#   #           specify(responses = G_1000_MFI, treatments = G_serostatus,
+#   #                   controls = controls_mfis, trans = "log",
+#   #                   model = "lmm", rands = "DayOfSampling"))
+#   do_fam_inference(spec, seros_1000_db)
 # }
 
 default_control <- function() {
