@@ -1,4 +1,4 @@
-#' @include specifications.R
+#' @include specifications.R models.R
 NULL
 
 #  Confidence methods ------------------------------------------------------------------
@@ -18,13 +18,30 @@ confidence <- function(object, level, ...) {
   UseMethod("confidence")
 }
 
+#' @export
+confidence.mmi_model <- function(object, level) {
+  inv_trans <- inv(object@trans)
+  est <- coef(object)
+  confs <- warn(confint(object@fit, parm = object@trt_levels, level = level, quiet = TRUE),
+                object,
+                "estimation of confidence intervals")
+  confs <- inv_trans(confs)
+  confs <- simplify_col_sel(confs)
+  tibble(response = object@response,
+         treatment = object@treatment,
+         treatment_levels = object@trt_levels,
+         est = inv_trans(est),
+         lower = confs$lower,
+         higher = confs$higher)
+}
+
 #' @describeIn confidence
 #' Computes the confidence interval using the t-distribution assumption and sets up a
 #' tidy tibble with the information. Uses the sandwich estimated standard errors.
 #' @export
 confidence.mmi_lm <- function(object, level) {
   inv_trans <- inv(object@trans)
-  mu <- coef(object@fit)[object@trt_levels]
+  mu <- coef(object)
   alpha <- (1 - level) / 2
   p_thresh <- qt(1 - alpha, object@fit$df.residual)
   tibble(response = object@response,
@@ -35,48 +52,3 @@ confidence.mmi_lm <- function(object, level) {
          higher = inv_trans(mu + p_thresh * object@se))
 }
 
-#' @describeIn confidence
-#' Computes the confidence interval using profile likelihood (the confint method)
-#' and sets up a tidy tibble with the information.
-#' @export
-confidence.mmi_logreg <- function(object, level) {
-  inv_trans <- inv(object@trans)
-  est <- coef(object@fit)[object@trt_levels]
-  confs <- warn(confint(object@fit, parm = object@trt_levels, level = level),
-                object,
-                "estimation of logistic regression confidence intervals")
-  confs <- inv_trans(confs)
-  if (is.vector(confs)) {
-    lower <- confs[1]
-    higher <- confs[2]
-  } else {
-    lower <- confs[, 1]
-    higher <- confs[, 2]
-  }
-  tibble(response = object@response,
-         treatment = object@treatment,
-         treatment_levels = object@trt_levels,
-         est = inv_trans(est),
-         lower = lower,
-         higher = higher)
-}
-
-#' @describeIn confidence
-#' Computes the confidence interval using profile likelihood (the confint method)
-#' and sets up a tidy tibble with the information.
-#' @export
-confidence.mmi_lmm <- function(object, level) {
-  inv_trans <- inv(object@trans)
-  est <- inv_trans(fixef(object@fit)[object@trt_levels])
-  confs <- warn(confint.merMod(object@fit, parm = object@trt_levels, level = level, quiet = TRUE),
-                object,
-                "estimation of lmm confidence intervals")
-  confs[object@trt_levels, ] <- inv_trans(confs[object@trt_levels, ])
-  confs <- simplify_col_sel(confs)
-  tibble(response = object@response,
-         treatment = object@treatment,
-         treatment_levels = object@trt_levels,
-         est = est,
-         lower = confs$lower,
-         higher = confs$higher)
-}

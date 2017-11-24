@@ -1,4 +1,4 @@
-#' @include specifications.R
+#' @include specifications.R models.R
 NULL
 
 
@@ -16,40 +16,22 @@ NULL
 #' @export
 test <- function(object, ...) UseMethod("test")
 
+test.mmi_model <- function(object) {
+  lrt(object)
+}
 #' @describeIn test
 #' Performs a t-test with the sandwiched-estimated standard errors and sets up a tidy tibble
 #' with the information.
 #' @export
 test.mmi_lm <- function(object) {
-  est <- coef(object@fit)[object@trt_levels]
-  t <- est / object@se
-  p <- 2 * pt(abs(t), object@fit$df.residual, lower.tail = FALSE)
-  setup_test_tib(object, p)
+  wald(object)
 }
 
 #' @describeIn test
 #' Performs an lrt and setups a tidy tibble with the information.
 #' @export
 test.mmi_lmm <- function(object) {
-  null <- warn(lmer(object@null_formula, object@fit@frame),
-               object,
-               "fitting of null model")
-  p <- KRmodcomp(object@fit, null)$stats$p.value
-  tib <- setup_test_tib(object, p)
-  tib$treatment_levels <- NULL
-  tib
-}
-
-#' @describeIn test
-#' Performs an lrt and setups a tidy tibble with the information.
-#' @export
-test.mmi_logreg <- function(object) {
-  ll_null <- warn(logLik(glm(object@null_formula, object@fit$model, family = "binomial")),
-                  object,
-                  "LRT logistic regresion")
-  tib <- setup_test_tib(object, p_lrt(ll_null, logLik(object@fit)))
-  tib$treatment_levels <- NULL
-  tib
+  ft(object)
 }
 
 # S3 method lrt        ---------------------------------------------------------------
@@ -68,37 +50,40 @@ lrt <- function(object) UseMethod("lrt")
 #' Performs a likelihood ratio test (an F-test) for the \code{\link[stats]{lm}} object in the
 #' slot fit and sets up a tidy tibble for the result.
 #' @export
-lrt.mmi_lm <- function(object) {
-  ll_null <- logLik(lm(object@null_formula, object@fit$model))
-  tib <- setup_lrt_tib(object, p_lrt(ll_null, logLik(object@fit)))
-  tib$treatment_levels <- NULL
-  tib
+lrt.mmi_model <- function(object) {
+  p <- anova(object@fit, fit_null(object, REML = FALSE), test = "LRT")[-1, "Pr(>Chi)"]
+  setup_lrt_tib(object, p, "lrt")
 }
 
-#' Performs a likelihood ratio test for the \linkS4class{lmerMod} in the fit slot and sets up
-#' a tidy tibble for the result.
-#' @export
-lrt.mmi_lmm <- function(object) {
-  ll_null <- logLik(lmer(object@null_formula, object@fit@frame, REML = FALSE))
-  ll_alt <- logLik(refitML(object@fit))
-  tib <- setup_lrt_tib(object, p_lrt(ll_null, ll_alt))
-  tib$treatment_levels <- NULL
-  tib
+lrt.mmi_beta <- function(object) {
+  null <- fit_null(object)
+  setup_lrt_tib(object, p_lrt(logLik(null), logLik(object@fit)), "lrt")
 }
 
-#' Performs a likelihood ratio test for the binomial \code{\link[stats]{glm}} in the fit slot
-#' and sets up a tidy tibble with the result.
-#' @export
-lrt.mmi_logreg <- function(object) {
-  tib <- test(object)
-  tib[1, ]
-}
-
+# ft --------------------------------------------------------------------------------
 #' @export
 ft <- function(object) UseMethod("ft")
 
 #' @export
+ft.mmi_lm <- function(object) {
+  p <- anova(mbig, msmall)[-1, "Pr(>F)"]
+  setup_lrt_tib(object, p, "ft")
+}
+
+#' @export
 ft.mmi_lmm <- function(object) {
-  tib <- test.mmi_lmm(object)
-  tib[1, ]
+  null <- warn(fit_null(object), object, "fitting of null model")
+  p <- KRmodcomp(object@fit, null)$stats$p.value
+  setup_lrt_tib(object, p, "ft")
+}
+
+#' @export
+wald <- function(object) UseMethod("wald")
+
+#' @export
+wald.mmi_lm <- function(object) {
+  est <- coef(object@fit)[object@trt_levels]
+  t <- est / object@se
+  p <- 2 * pt(abs(t), object@fit$df.residual, lower.tail = FALSE)
+  setup_test_tib(object, p, "wald")
 }

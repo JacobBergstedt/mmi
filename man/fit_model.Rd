@@ -7,6 +7,7 @@
 \alias{fit_model.spec_lmm}
 \alias{fit_model.spec_trans_lm}
 \alias{fit_model.spec_trans_lmm}
+\alias{fit_model.spec_beta}
 \title{S3 Generic function fit_model to construct mmi_model objects.}
 \usage{
 fit_model(object, study_frame)
@@ -20,6 +21,8 @@ fit_model(object, study_frame)
 \method{fit_model}{spec_trans_lm}(object, study_frame)
 
 \method{fit_model}{spec_trans_lmm}(object, study_frame)
+
+\method{fit_model}{spec_beta}(object, study_frame)
 }
 \arguments{
 \item{object}{\code{\linkS4class{spec}} object.}
@@ -49,5 +52,8 @@ and then fitting a \code{\link[stats]{lm}} on the transformed response using the
 
 \item \code{spec_trans_lmm}: Constructs a \code{\linkS4class{mmi_trans_lmm}} object by setting up a formula using \code{\link{get_formula}}
 and then fitting a \code{\linkS4class{lmerMod}} on the transformed response using the formula and the data in study_frame.
+
+\item \code{spec_beta}: Constructs a \code{\linkS4class{mmi_logreg}} object by setting up a formula using \code{\link{get_formula}}
+and then fitting a \code{\link[stats]{glm}} logistic regression using the formula and the data in study_frame.
 }}
 

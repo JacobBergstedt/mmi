@@ -1,23 +1,41 @@
-# test_package <- function(nr_cores) {
-#   library(tidyverse)
-#   library(lme4)
-#   library(mmi)
-#   library(parallel)
-#   seros_1000_db <- readRDS("~/SEROLOGIES/Data/RData/seros_1000_db.rds")
-#   load("~/SEROLOGIES/Data/RData/globals.RData")
-#   controls_counts <- c("HourOfSampling", "Sex", "Age", "CMV", "Smoking")
-#
-#
-#   spec <- specify(responses = G_facs4ser, treatments = G_serolevels,
-#                   controls = controls_counts, trans = "log",
-#                   model = "lmm", rands = "DayOfSampling")
-#
-#   # spec <- c(spec,
-#   #           specify(responses = G_1000_MFI, treatments = G_serostatus,
-#   #                   controls = controls_mfis, trans = "log",
-#   #                   model = "lmm", rands = "DayOfSampling"))
-#   do_fam_inference(spec, seros_1000_db)
-# }
+test_package <- function(nr_cores) {
+  library(tidyverse)
+  library(lme4)
+  library(mmi)
+  library(parallel)
+  seros_1000_db <- readRDS("~/SEROLOGIES/Data/RData/seros_1000_db.rds")
+  load("~/SEROLOGIES/Data/RData/globals.RData")
+
+
+
+  spec <- specify(responses = "CMV", treatments = G_serolevels,
+                  controls = c("Age", "Sex"), model = "logreg")
+
+  spec <- specify(responses = "N_activated_Treg.panel2",
+                  treatments = G_serolevels,
+                  controls = c("Age", "Sex"))
+
+  spec <- specify(responses = "N_activated_Treg.panel2",
+                  treatments = G_serolevels,
+                  controls = c("Age", "Sex"),
+                  model = "trans_lm",
+                  trans = "log")
+  fam <- make_fam(spec[1:2], seros_1000_db)
+
+  p <- na.omit(seros_1000_db[c("N_activated_Treg.panel2", "CMV", "Age")])
+  p$N_activated_Treg.panel2 <-  p$N_activated_Treg.panel2 / (max(p$N_activated_Treg.panel2) + 1)
+  spec <- specify(responses = "N_activated_Treg.panel2", treatments = c("CMV", "Age"),
+                  model = "beta")
+
+  spec <- specify(responses = "N_activated_Treg.panel2", treatments = c("CMV", "Age"))
+  fam <- make_fam(spec[1:2], p)
+
+  # spec <- c(spec,
+  #           specify(responses = G_1000_MFI, treatments = G_serostatus,
+  #                   controls = controls_mfis, trans = "log",
+  #                   model = "lmm", rands = "DayOfSampling"))
+  do_fam_inference(spe, seros_1000_db)
+}
 
 default_control <- function() {
   lme4::lmerControl(optimizer = "nloptwrap",
@@ -72,10 +90,11 @@ p_lrt <- function(ll_null, ll_alt) {
   pchisq(c(lr_stat), df = df, lower.tail = FALSE)
 }
 
-setup_lrt_tib <- function(obj, p) {
+setup_lrt_tib <- function(obj, p, test) {
   tibble(response = obj@response,
          treatment = obj@treatment,
-         p = p)
+         p = p,
+         test = test)
 }
 
 simplify_col_sel <- function(mat) {
@@ -89,22 +108,13 @@ simplify_col_sel <- function(mat) {
   list(lower = lower, higher = higher)
 }
 
-setup_confint_tib <- function(object, est, inv_trans, parm, level) {
-  confs <- warn(confint(object@fit, parm = parm, level = level, quiet = TRUE), object)
-  confs[object@trt_levels,] <- inv_trans(confs[object@trt_levels, ])
-  if (is.vector(confs)) {
-    lower <- confs[1]
-    higher <- confs[2]
-  } else {
-    lower <- confs[, 1]
-    higher <- confs[, 2]
-  }
-  tibble(response = object@response,
+setup_compare_tib <- function(object, val) {
+  tibble(val = val,
+         model = class(object),
+         response = object@response,
          treatment = object@treatment,
-         treatment_levels = object@trt_levels,
-         est = inv_trans(est),
-         lower = lower,
-         higher = higher)
+         controls = list(object@controls),
+         trans = object@trans)
 }
 
 setup_test_tib <- function(obj, p) {

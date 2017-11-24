@@ -1,6 +1,10 @@
 #' @include specifications.R
 NULL
 
+
+# Register need classes -------------------------------------------------------------
+setOldClass("betareg")
+
 # mmi_model classes -------------------------------------------------------
 .make_model <- setClass("mmi_model",
                         slots = c(trt_levels = "character",
@@ -41,10 +45,45 @@ NULL
                          slots = c(fit = "glm"),
                          contains = c("spec_logreg", "mmi_model"))
 
+.make_beta <- setClass("mmi_beta",
+                       slots = c(fit = "betareg"),
+                       contains = c("spec_beta", "mmi_model"))
+
+# Coef methods ----------------------------------------------------------------------
+#' @export
+coef.mmi_model <- function(object) coef(object@fit)[object@trt_levels]
+
+#' @export
+coef.mmi_lmm <- function(object) fixef(object@fit)[object@trt_levels]
+
+
+# fit_null methods ------------------------------------------------------------------
+#' @export
+fit_null <- function(object, ...) UseMethod("fit_null")
+
+#' @export
+fit_null.mmi_lm <- function(object, ...) lm(object@null_formula, object@fit$model)
+
+#' @export
+fit_null.mmi_logreg <- function(object, ...) {
+  glm(object@null_formula, object@fit$model, family = "binomial")
+}
+
+#' @export
+fit_null.mmi_beta <- function(object, ...) {
+  betareg(object@null_formula, object@fit$model)
+}
+
+#' @export
+fit_null.mmi_lmm <- function(object, REML = TRUE) {
+  lmer(object@null_formula, object@fit@frame, REML = REML)
+}
+
+
+
+
 
 # Variance component estimations ----------------------------------------------------
-
-
 #' @export
 prop_var <- function(object) UseMethod("prop_var")
 

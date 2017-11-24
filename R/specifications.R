@@ -36,6 +36,8 @@
 #'See help for \code{\linkS4class{spec}}.
 .make_spec_logreg <- setClass("spec_logreg", contains = "spec")
 
+.make_spec_beta <- setClass("spec_beta", contains = "spec")
+
 #'S4 class "spec_trans_lm_lm" for linear model with a transformed response.
 #'
 #'Using this specification will transformed the response variable.
@@ -48,7 +50,7 @@
 #'For the slots see help for \code{\linkS4class{spec}}.
 .make_spec_trans_lmm <- setClass("spec_trans_lmm", contains = "spec_lmm")
 
-#'S4 class "spec_int_lm for a linear model where the treatment is an interaction term
+#'S4 class spec_int_lm for a linear model where the treatment is an interaction term
 .make_spec_int_lm <- setClass("spec_int_lm",
                               slots = "interacting_var",
                               contains = "spec_lm")
@@ -297,3 +299,17 @@ fit_model.spec_trans_lmm <- function(object, study_frame) {
   .make_lmm(NextMethod())
 }
 
+#'@describeIn fit_model
+#' Constructs a \code{\linkS4class{mmi_logreg}} object by setting up a formula using \code{\link{get_formula}}
+#' and then fitting a \code{\link[stats]{glm}} logistic regression using the formula and the data in study_frame.
+#' @export
+fit_model.spec_beta <- function(object, study_frame) {
+  fm <- get_formula(object)
+  fit <- warn(betareg(fm, study_frame), object, activity = "fitting of model")
+  trt_levels <- get_trt_levels(object, fit)
+  .make_beta(object,
+             fit = fit,
+             trt_levels = trt_levels,
+             formula = fm,
+             null_formula = get_null_formula(object))
+}

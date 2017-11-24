@@ -1,4 +1,4 @@
-#' @include models.R test.R confidence.R AIC.R
+#' @include test.R confidence.R AIC.R residuals.R
 NULL
 
 # Defines the family and spec_fam classes ------------------------------
@@ -42,7 +42,8 @@ NULL
 specify <- function(responses, treatments = character(0), controls = character(0),
                     model = NULL, trans = NULL, rands = NULL) {
   if (!is.null(model)) {
-    if (!model %in% c("lm", "lmm", "trans_lm", "trans_lmm", "logreg", "int_lm")) stop("Not a valid model name")
+    mvec <- c("lm", "lmm", "trans_lm", "trans_lmm", "logreg", "beta", "int_lm")
+    if (!model %in% mvec) stop("Not a valid model name")
     if (model == "lm" & !is.null(rands)) stop("lm should not have random effects")
     if (model == "lmm" & is.null(rands)) stop("lmm must have random effects")
   }
@@ -55,6 +56,7 @@ specify <- function(responses, treatments = character(0), controls = character(0
                     lm = "identity",
                     lmm = "identity",
                     logreg = "log",
+                    beta = "log",
                     int_lm = "identity",
                     trans_lm = stop("transformation specifications must have a specified transformation"),
                     trans_lmm = stop("transformation specifications must have a specified transformation"))
@@ -77,6 +79,7 @@ specify <- function(responses, treatments = character(0), controls = character(0
                             lm = .make_spec_lm(spec_obj),
                             lmm = .make_spec_lmm(spec_obj, rands = rands),
                             logreg = .make_spec_logreg(spec_obj),
+                            beta = .make_spec_beta(spec_obj),
                             trans_lm = .make_spec_trans_lm(spec_obj),
                             trans_lmm = .make_spec_trans_lmm(spec_obj, rands = rands),
                             int_lm = .make_spec_int_lm(spec_obj))
@@ -109,6 +112,7 @@ specify_with_list <- function(spec_list) {
                              lm = .make_spec_lm(spec_obj),
                              lmm = .make_spec_lmm(spec_obj, rands = spec[["rands"]]),
                              logreg = .make_spec_logreg(spec_obj),
+                             beta = .make_spec_beta(spec_obj),
                              trans_lm = .make_spec_trans_lm(spec_obj),
                              trans_lmm = .make_spec_trans_lmm(spec_obj,
                                                               rands = spec[["rands"]]))
@@ -240,10 +244,39 @@ ft.fam <- function(object) {
 }
 
 #' @export
+wald.fam <- function(object) {
+  all_has_treatments(object)
+  tib <- purrr::map_dfr(object, wald)
+  tib$FDR <- stats::p.adjust(tib$p, "fdr")
+  tib
+}
+
+#' @export
 prop_var.fam <- function(object) {
   purrr::map_dfr(object, prop_var)
 }
 
+#' @export
+do_fam_inference <- function(spec, data, conf_level = 0.01, selection_thresh = 0.01,
+                             selection_conf_level = 0.99) {
+  fam <- make_fam(spec, data)
+  hyp <- test(fam)
+  confs <- confidence(fam, level = 0.99)
+  selected_confs <- select_confidence(fam, hyp, thresh = 0.01, level = 0.99)
+  list(hyp = hyp, confs = confs, selected_confs = selected_confs)
+}
+
+
+# Fam comparison methods ------------------------------------------------------------
+#' @export
+residuals.fam <- function(object) {
+  purrr::map_dfr(object, residuals)
+}
+
+#' @export
+AIC.fam <- function(object) {
+  purrr::map_dfr(object, AIC)
+}
 
 # Inference methods for spec_fam -----------------------------------------------------
 #' @export
@@ -314,15 +347,6 @@ inference.spec_fam <- function(object, study_frame, level, nr_cores = 1) {
   }
 }
 
-#' @export
-do_fam_inference <- function(spec, data, conf_level = 0.01, selection_thresh = 0.01,
-                         selection_conf_level = 0.99) {
-  fam <- make_fam(spec, data)
-  hyp <- test(fam)
-  confs <- confidence(fam, level = 0.99)
-  selected_confs <- select_confidence(fam, hyp, thresh = 0.01, level = 0.99)
-  list(hyp = hyp, confs = confs, selected_confs = selected_confs)
-}
 # FCR function ----------------------------------------------------------------------
 
 #' Calculates FCR adjusted confidence intervals

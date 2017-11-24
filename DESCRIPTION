@@ -19,14 +19,16 @@ Imports:
     tibble,
     methods,
     stats,
-    stringr
+    stringr,
+    betareg
 Collate:
     'specifications.R'
+    'models.R'
     'AIC.R'
     'aux_functions.R'
     'confidence.R'
+    'residuals.R'
     'test.R'
-    'models.R'
     'families.R'
     'mmi.R'
 Suggests: testthat

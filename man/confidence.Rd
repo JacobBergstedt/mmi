@@ -3,18 +3,12 @@
 \name{confidence}
 \alias{confidence}
 \alias{confidence.mmi_lm}
-\alias{confidence.mmi_logreg}
-\alias{confidence.mmi_lmm}
 \alias{confidence.fam}
 \title{Generic method to compute confidence regions for mmi model and family objects.}
 \usage{
 confidence(object, level, ...)
 
 \method{confidence}{mmi_lm}(object, level)
-
-\method{confidence}{mmi_logreg}(object, level)
-
-\method{confidence}{mmi_lmm}(object, level)
 
 \method{confidence}{fam}(object, level = 0.95)
 }
@@ -36,12 +30,6 @@ map-reduce pattern.
 \itemize{
 \item \code{mmi_lm}: Computes the confidence interval using the t-distribution assumption and sets up a
 tidy tibble with the information. Uses the sandwich estimated standard errors.
-
-\item \code{mmi_logreg}: Computes the confidence interval using profile likelihood (the confint method)
-and sets up a tidy tibble with the information.
-
-\item \code{mmi_lmm}: Computes the confidence interval using profile likelihood (the confint method)
-and sets up a tidy tibble with the information.
 
 \item \code{fam}: Maps over the family, constructs a confidence interval for each model object using the
 corresponding S3 method, and the binds the information together in a tidy way.

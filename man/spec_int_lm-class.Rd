@@ -4,7 +4,7 @@
 \name{spec_int_lm-class}
 \alias{spec_int_lm-class}
 \alias{.make_spec_int_lm}
-\title{S4 class "spec_int_lm for a linear model where the treatment is an interaction term}
+\title{S4 class spec_int_lm for a linear model where the treatment is an interaction term}
 \description{
-S4 class "spec_int_lm for a linear model where the treatment is an interaction term
+S4 class spec_int_lm for a linear model where the treatment is an interaction term
 }

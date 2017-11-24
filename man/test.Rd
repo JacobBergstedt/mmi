@@ -4,7 +4,6 @@
 \alias{test}
 \alias{test.mmi_lm}
 \alias{test.mmi_lmm}
-\alias{test.mmi_logreg}
 \alias{test.fam}
 \title{S3 generic method to do hypothesis tests in the mmi model and family objects.}
 \usage{
@@ -13,8 +12,6 @@ test(object, ...)
 \method{test}{mmi_lm}(object)
 
 \method{test}{mmi_lmm}(object)
-
-\method{test}{mmi_logreg}(object)
 
 \method{test}{fam}(object)
 }
@@ -36,8 +33,6 @@ The FDR-adjusted significance level is also calculated and added to the tibble.
 with the information.
 
 \item \code{mmi_lmm}: Performs an lrt and setups a tidy tibble with the information.
-
-\item \code{mmi_logreg}: Performs an lrt and setups a tidy tibble with the information.
 
 \item \code{fam}: Maps over the family, performs a test for each model using the corresponding S3 method,
 constructs a tibble with the p-value of the test included, and then binds the tibbles together.
