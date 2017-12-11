@@ -1,7 +1,6 @@
 #' @include specifications.R models.R
 NULL
 
-
 #  S3 generic method test --------------------------------------------------------------
 #' S3 generic method to do hypothesis tests in the mmi model and family objects.
 #'
@@ -16,6 +15,7 @@ NULL
 #' @export
 test <- function(object, ...) UseMethod("test")
 
+#' @export
 test.mmi_model <- function(object) {
   lrt(object)
 }
@@ -55,6 +55,7 @@ lrt.mmi_model <- function(object) {
   setup_lrt_tib(object, p, "lrt")
 }
 
+#' @export
 lrt.mmi_beta <- function(object) {
   null <- fit_null(object)
   setup_lrt_tib(object, p_lrt(logLik(null), logLik(object@fit)), "lrt")
@@ -66,7 +67,7 @@ ft <- function(object) UseMethod("ft")
 
 #' @export
 ft.mmi_lm <- function(object) {
-  p <- anova(mbig, msmall)[-1, "Pr(>F)"]
+  p <- anova(object@fit, fit_null(object))[-1, "Pr(>F)"]
   setup_lrt_tib(object, p, "ft")
 }
 

@@ -1,42 +1,3 @@
-test_package <- function(nr_cores) {
-  library(tidyverse)
-  library(lme4)
-  library(mmi)
-  library(parallel)
-  seros_1000_db <- readRDS("~/SEROLOGIES/Data/RData/seros_1000_db.rds")
-  load("~/SEROLOGIES/Data/RData/globals.RData")
-
-
-
-  spec <- specify(responses = "CMV", treatments = G_serolevels,
-                  controls = c("Age", "Sex"), model = "logreg")
-
-  spec <- specify(responses = "N_activated_Treg.panel2",
-                  treatments = G_serolevels,
-                  controls = c("Age", "Sex"))
-
-  spec <- specify(responses = "N_activated_Treg.panel2",
-                  treatments = G_serolevels,
-                  controls = c("Age", "Sex"),
-                  model = "trans_lm",
-                  trans = "log")
-  fam <- make_fam(spec[1:2], seros_1000_db)
-
-  p <- na.omit(seros_1000_db[c("N_activated_Treg.panel2", "CMV", "Age")])
-  p$N_activated_Treg.panel2 <-  p$N_activated_Treg.panel2 / (max(p$N_activated_Treg.panel2) + 1)
-  spec <- specify(responses = "N_activated_Treg.panel2", treatments = c("CMV", "Age"),
-                  model = "beta")
-
-  spec <- specify(responses = "N_activated_Treg.panel2", treatments = c("CMV", "Age"))
-  fam <- make_fam(spec[1:2], p)
-
-  # spec <- c(spec,
-  #           specify(responses = G_1000_MFI, treatments = G_serostatus,
-  #                   controls = controls_mfis, trans = "log",
-  #                   model = "lmm", rands = "DayOfSampling"))
-  do_fam_inference(spe, seros_1000_db)
-}
-
 default_control <- function() {
   lme4::lmerControl(optimizer = "nloptwrap",
                     optCtrl = list(maxeval = 1e4, xtol_abs = 1e-8, ftol_abs = 1e-8))
@@ -90,13 +51,6 @@ p_lrt <- function(ll_null, ll_alt) {
   pchisq(c(lr_stat), df = df, lower.tail = FALSE)
 }
 
-setup_lrt_tib <- function(obj, p, test) {
-  tibble(response = obj@response,
-         treatment = obj@treatment,
-         p = p,
-         test = test)
-}
-
 simplify_col_sel <- function(mat) {
   if (is.vector(mat)) {
     lower <- mat[1]
@@ -117,10 +71,18 @@ setup_compare_tib <- function(object, val) {
          trans = object@trans)
 }
 
-setup_test_tib <- function(obj, p) {
+setup_lrt_tib <- function(obj, p, test) {
+  tibble(response = obj@response,
+         treatment = obj@treatment,
+         test = test,
+         p = p)
+}
+
+setup_test_tib <- function(obj, p, test) {
   tibble(response = obj@response,
          treatment = obj@treatment,
          treatment_levels = obj@trt_levels,
+         test = test,
          p = p)
 }
 
@@ -133,3 +95,54 @@ warn <- function(expr, object, activity) {
     invokeRestart("muffleWarning")
   })
 }
+
+
+# # 1 ---------------------------------------------------------------------------------
+#
+# # Load packages and data ------------------------------------------------------------
+# library(tidyverse)
+# library(mmi)
+#
+# seros_430_db <- readRDS("~/SEROLOGIES/Data/RData/seros_430_db.rds")
+# load("~/SEROLOGIES/Data/RData/globals.RData")
+# controls_counts <- c("Sex", "Age", "CMV", "Smoking")
+#
+#
+# # FACS 430 T8 -----------------------------------------------------------------------
+# spec_log <- specify(responses = G_430_props_T,
+#                     treatments = "CMV",
+#                     controls = controls_counts, model = "trans_lm",
+#                     trans = "log")
+#
+# spec_beta <- specify(responses = G_430_props_T,
+#                      treatments = "CMV",
+#                      controls = controls_counts, model = "beta")
+#
+# spec <- c(spec_log, spec_beta)
+# fam <- make_fam(spec, seros_430_db)
+# aic <- AIC(fam) %>% select(-controls, -treatment)
+# aic %>% arrange(response, val) %>% group_by(response) %>%
+#   summarize(o = diff(val), p = first(model))
+#
+# # FACS 430 NK -----------------------------------------------------------------------
+# spec_log <- specify(responses = G_430_props_NK,
+#                     treatments = "CMV",
+#                     controls = controls_counts, model = "trans_lm",
+#                     trans = "log")
+#
+# spec_beta <- specify(responses = G_430_props_NK,
+#                      treatments = "CMV",
+#                      controls = controls_counts, model = "beta")
+#
+# spec <- c(spec_log, spec_beta)
+# fam <- make_fam(spec, seros_430_db)
+# aic <- AIC(fam) %>% select(-controls, -treatment)
+# aic %>% arrange(response, val) %>% group_by(response) %>%
+#   summarize(o = diff(val), p = first(model))
+#
+#
+#
+# # FACS 430 ~ NK Residuals -----------------------------------------------------------
+# res <- residuals(fam)
+#
+#

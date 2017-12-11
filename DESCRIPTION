@@ -20,7 +20,7 @@ Imports:
     methods,
     stats,
     stringr,
-    betareg
+    betareg 
 Collate:
     'specifications.R'
     'models.R'
