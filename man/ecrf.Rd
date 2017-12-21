@@ -3,21 +3,14 @@
 \docType{data}
 \name{ecrf}
 \alias{ecrf}
-\title{Prices of 50,000 round cut diamonds.}
-\format{A data frame with 53940 rows and 10 variables:
-\describe{
-  \item{price}{price, in US dollars}
-  \item{carat}{weight of the diamond, in carats}
-  ...
-}}
-\source{
-\url{http://www.diamondse.info/}
-}
+\title{Demographical and clinical data from the article  "Natural variation in immune cell parameters is preferentially driven by genetic factors".}
+\format{An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 1000 rows and 45 columns.}
 \usage{
 ecrf
 }
 \description{
-A dataset containing the prices and other attributes of almost 54,000
-diamonds.
+A dataset containing 45 clinical and demographical variables from From the Institut Pasteur project Milieu Interieur.
+This data was analyzed in the article "Natural variation in immune cell parameters is preferentially driven by genetic factors"
+using the mmi R package.
 }
 \keyword{datasets}

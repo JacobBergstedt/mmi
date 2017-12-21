@@ -3,21 +3,14 @@
 \docType{data}
 \name{facs}
 \alias{facs}
-\title{Prices of 50,000 round cut diamonds.}
-\format{A data frame with 53940 rows and 10 variables:
-\describe{
-  \item{price}{price, in US dollars}
-  \item{carat}{weight of the diamond, in carats}
-  ...
-}}
-\source{
-\url{http://www.diamondse.info/}
-}
+\title{Flow cytometry data from the article  "Natural variation in immune cell parameters is preferentially driven by genetic factors".}
+\format{An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 1000 rows and 167 columns.}
 \usage{
 facs
 }
 \description{
-A dataset containing the prices and other attributes of almost 54,000
-diamonds.
+A dataset containing 167 immunophenotypes. From the Institut Pasteur project Milieu Interieur.
+This data was analyzed in the article "Natural variation in immune cell parameters is preferentially driven by genetic factors"
+using the mmi R package.
 }
 \keyword{datasets}
