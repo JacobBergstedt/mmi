@@ -1,0 +1,36 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "README-"
+)
+```
+
+# mmi
+
+mmi is an R package to conveniently fit and compare many models. It was developed in parallel to the writing of the article "Natural variation in immune cell parameters is preferentially driven by genetic factors". The flow cytometry data, as well as the clinical/demographical data analyzed in that article is published within this package. A full tutorial on how to use the package, and how to reproduce the non-genetical analysis done in the paper will be available here shortly.
+
+## Installation
+
+You can install mmi from github with:
+
+```{r gh-installation, eval = FALSE}
+# install.packages("devtools")
+devtools::install_github("JacobBergstedt/mmi")
+```
+
+## The data
+
+The flow cytometry and demographical data can be accessed after loading the library:
+
+```{r example}
+library(mmi)
+facs
+ecrf
+```

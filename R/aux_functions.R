@@ -96,53 +96,9 @@ warn <- function(expr, object, activity) {
   })
 }
 
-
-# # 1 ---------------------------------------------------------------------------------
-#
-# # Load packages and data ------------------------------------------------------------
-# library(tidyverse)
-# library(mmi)
-#
-# seros_430_db <- readRDS("~/SEROLOGIES/Data/RData/seros_430_db.rds")
-# load("~/SEROLOGIES/Data/RData/globals.RData")
-# controls_counts <- c("Sex", "Age", "CMV", "Smoking")
-#
-#
-# # FACS 430 T8 -----------------------------------------------------------------------
-# spec_log <- specify(responses = G_430_props_T,
-#                     treatments = "CMV",
-#                     controls = controls_counts, model = "trans_lm",
-#                     trans = "log")
-#
-# spec_beta <- specify(responses = G_430_props_T,
-#                      treatments = "CMV",
-#                      controls = controls_counts, model = "beta")
-#
-# spec <- c(spec_log, spec_beta)
-# fam <- make_fam(spec, seros_430_db)
-# aic <- AIC(fam) %>% select(-controls, -treatment)
-# aic %>% arrange(response, val) %>% group_by(response) %>%
-#   summarize(o = diff(val), p = first(model))
-#
-# # FACS 430 NK -----------------------------------------------------------------------
-# spec_log <- specify(responses = G_430_props_NK,
-#                     treatments = "CMV",
-#                     controls = controls_counts, model = "trans_lm",
-#                     trans = "log")
-#
-# spec_beta <- specify(responses = G_430_props_NK,
-#                      treatments = "CMV",
-#                      controls = controls_counts, model = "beta")
-#
-# spec <- c(spec_log, spec_beta)
-# fam <- make_fam(spec, seros_430_db)
-# aic <- AIC(fam) %>% select(-controls, -treatment)
-# aic %>% arrange(response, val) %>% group_by(response) %>%
-#   summarize(o = diff(val), p = first(model))
-#
-#
-#
-# # FACS 430 ~ NK Residuals -----------------------------------------------------------
-# res <- residuals(fam)
-#
-#
+# install.packages(c(
+# "purrr",
+# "pbkrtest",
+# "tibble",
+# "stringr",
+# "betareg"))

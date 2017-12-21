@@ -21,7 +21,8 @@ Imports:
     stats,
     stringr,
     betareg 
-Collate:
+Collate: 
+    'data.R'
     'specifications.R'
     'models.R'
     'AIC.R'

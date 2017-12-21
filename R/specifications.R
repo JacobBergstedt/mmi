@@ -1,3 +1,4 @@
+#' @include data.R
 # Define spec classes -----------------------------------------------------
 #'S4 class spec that represents a model specification.
 #'
