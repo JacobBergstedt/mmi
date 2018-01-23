@@ -196,7 +196,7 @@ get_trt_levels.spec <- function(object, fit) {
   mf <- fit[["model"]]
   trt <- mf[[object@treatment]]
   if (!is.character(trt) & !is.logical(trt)) {
-    paste0(object@treatment, fit[["xlevels"]][[object@treatment]][-1])
+    paste0(object@treatment, levels(trt)[-1])
   } else {
     paste0(object@treatment, levels(factor(trt))[-1])
   }
