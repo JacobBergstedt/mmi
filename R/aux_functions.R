@@ -62,12 +62,24 @@ simplify_col_sel <- function(mat) {
   list(lower = lower, higher = higher)
 }
 
-setup_compare_tib <- function(object, val) {
-  tibble(val = val,
+setup_resid_tib <- function(object, res) {
+  tib <- tibble(residuals = res,
          model = class(object),
          response = object@response,
-         treatment = object@treatment,
-         controls = list(object@controls),
+         predictors = list(c(object@treatment, object@controls)),
+         trans = object@trans,
+         expected_norm = qnorm(ppoints(length(res)))[order(order(res))])
+
+  tib <- bind_cols(tib, frame(object))
+  names(tib)[names(tib) == object@response] <- "y"
+  tib
+}
+
+setup_AIC_tib <- function(object, val) {
+  tibble(AIC = val,
+         model = class(object),
+         response = object@response,
+         predictors = list(c(object@treatment, object@controls)),
          trans = object@trans)
 }
 

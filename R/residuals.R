@@ -3,12 +3,14 @@ NULL
 
 #' @export
 residuals.mmi_model <- function(object) {
+  # NOTE: should check on the family level that all predictors are the same!!!
+  # And clarify in the documentation that it only works for different response variables
+  # with the same predictors
   res <- residuals(object@fit)
-  tib <- setup_compare_tib(object, res)
-  tib$exp_norm <- qnorm(ppoints(length(res)))[order(order(res))]
-  tib
+  setup_resid_tib(object, res)
 }
 
+#' @export
 residuals.mmi_lm <- function(object) {
   hat <- lm.influence(object@fit, do.coef = FALSE)$hat
   hat <- hat[hat > 0]
@@ -17,9 +19,7 @@ residuals.mmi_lm <- function(object) {
   res <- res[ok]
   rdf <- object@fit$df.residual
   stddev <- sqrt(sum(res^2)/rdf)
-  tib <- setup_compare_tib(object, res/(sqrt(1 - hat) * stddev))
-  tib$exp_norm <- qnorm(ppoints(length(res)))[order(order(res))]
-  tib
+  setup_resid_tib(object, res/(sqrt(1 - hat) * stddev))
 }
 
 

@@ -37,6 +37,8 @@
 #'See help for \code{\linkS4class{spec}}.
 .make_spec_logreg <- setClass("spec_logreg", contains = "spec")
 
+.make_spec_nb <- setClass("spec_nb", contains = "spec")
+
 .make_spec_beta <- setClass("spec_beta", contains = "spec")
 
 #'S4 class "spec_trans_lm_lm" for linear model with a transformed response.
@@ -93,6 +95,17 @@ setMethod("initialize", "spec_lmm", function(.Object, ...){
 #' @param .Object The \code{\linkS4class{spec}} object to be created.
 #' @param ... Arguments from the constructor.
 setMethod("initialize", "spec_logreg", function(.Object, ...){
+  .Object <- callNextMethod()
+  .Object@trans <- "log"
+  .Object
+})
+
+#' S4 initialize method for \code{\linkS4class{spec_nb}}.
+#'
+#' Makes sure that the transformation for the logistic regression class is a log.
+#' @param .Object The \code{\linkS4class{spec}} object to be created.
+#' @param ... Arguments from the constructor.
+setMethod("initialize", "spec_nb", function(.Object, ...){
   .Object <- callNextMethod()
   .Object@trans <- "log"
   .Object
@@ -194,12 +207,16 @@ get_trt_levels <- function(object, fit) {
 }
 
 get_trt_levels.spec <- function(object, fit) {
-  mf <- fit[["model"]]
-  trt <- mf[[object@treatment]]
-  if (!is.character(trt) & !is.logical(trt)) {
-    paste0(object@treatment, levels(trt)[-1])
+  if (!is_empty(object@treatment)) {
+    mf <- fit[["model"]]
+    trt <- mf[[object@treatment]]
+    if (!is.character(trt) & !is.logical(trt)) {
+      paste0(object@treatment, levels(trt)[-1])
+    } else {
+      paste0(object@treatment, levels(factor(trt))[-1])
+    }
   } else {
-    paste0(object@treatment, levels(factor(trt))[-1])
+    character(0)
   }
 }
 
@@ -220,11 +237,15 @@ get_trt_levels.spec_lmm <- function(object, fit) {
 }
 
 get_trt_levels.spec_int_lm <- function(object, fit) {
-  mf <- fit[["model"]]
-  int_vars <- interacting_vars(object@treatment)
-  left <- paste0(int_vars$left, levels(mf[[int_vars$left]])[-1])
-  right <- paste0(int_vars$right, levels(mf[[int_vars$right]])[-1])
-  paste0(left, ":", right)
+  if (!is_empty(object@treatment)) {
+    mf <- fit[["model"]]
+    int_vars <- interacting_vars(object@treatment)
+    left <- paste0(int_vars$left, levels(mf[[int_vars$left]])[-1])
+    right <- paste0(int_vars$right, levels(mf[[int_vars$right]])[-1])
+    paste0(left, ":", right)
+  } else {
+    character(0)
+  }
 }
 
 # Constructors for the mmi_model objects ----------------------------------
@@ -266,6 +287,16 @@ fit_model.spec_logreg <- function(object, study_frame) {
   .make_logreg(object, fit = fit, trt_levels = trt_levels,
                formula = fm,
                null_formula = get_null_formula(object))
+}
+
+#' @export
+fit_model.spec_nb <- function(object, study_frame) {
+  fm <- get_formula(object)
+  fit <- warn(glm.nb(fm, study_frame), object, activity = "fitting of model")
+  trt_levels <- get_trt_levels(object, fit)
+  .make_nb(object, fit = fit, trt_levels = trt_levels,
+           formula = fm,
+           null_formula = get_null_formula(object))
 }
 
 #'@describeIn fit_model

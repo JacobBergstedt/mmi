@@ -9,4 +9,5 @@
 #' @importFrom stats anova lm coef as.formula confint glm logLik pchisq pt qt
 #' @importFrom pbkrtest KRmodcomp
 #' @importFrom betareg betareg
+#' @importFrom MASS glm.nb
 NULL

@@ -5,7 +5,7 @@ NULL
 # AIC measures ----------------------------------------------------------------------
 #' @export
 AIC.mmi_model <- function(object) {
-  setup_compare_tib(object, AIC(object@fit))
+  setup_AIC_tib(object, AIC(object@fit))
 }
 
 #' @export
@@ -18,6 +18,6 @@ AIC.mmi_lm <- function(object) {
     val <- AIC(object@fit) + 2 * (sum(object@fit$model[[object@response]]) + log(b))
   }
   else stop("Transformation not supported")
-  setup_compare_tib(object, val)
+  setup_AIC_tib(object, val)
 }
 

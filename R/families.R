@@ -42,7 +42,7 @@ NULL
 specify <- function(responses, treatments = character(0), controls = character(0),
                     model = NULL, trans = NULL, rands = NULL) {
   if (!is.null(model)) {
-    mvec <- c("lm", "lmm", "trans_lm", "trans_lmm", "logreg", "beta", "int_lm")
+    mvec <- c("lm", "lmm", "trans_lm", "trans_lmm", "logreg", "beta", "int_lm", "negbin")
     if (!model %in% mvec) stop("Not a valid model name")
     if (model == "lm" & !is.null(rands)) stop("lm should not have random effects")
     if (model == "lmm" & is.null(rands)) stop("lmm must have random effects")
@@ -56,6 +56,7 @@ specify <- function(responses, treatments = character(0), controls = character(0
                     lm = "identity",
                     lmm = "identity",
                     logreg = "log",
+                    negbin = "log",
                     beta = "log",
                     int_lm = "identity",
                     trans_lm = stop("transformation specifications must have a specified transformation"),
@@ -79,6 +80,7 @@ specify <- function(responses, treatments = character(0), controls = character(0
                             lm = .make_spec_lm(spec_obj),
                             lmm = .make_spec_lmm(spec_obj, rands = rands),
                             logreg = .make_spec_logreg(spec_obj),
+                            negbin = .make_spec_nb(spec_obj),
                             beta = .make_spec_beta(spec_obj),
                             trans_lm = .make_spec_trans_lm(spec_obj),
                             trans_lmm = .make_spec_trans_lmm(spec_obj, rands = rands),

@@ -4,6 +4,7 @@ NULL
 
 # Register need classes -------------------------------------------------------------
 setOldClass("betareg")
+setOldClass("negbin")
 
 # mmi_model classes -------------------------------------------------------
 .make_model <- setClass("mmi_model",
@@ -49,6 +50,10 @@ setOldClass("betareg")
                        slots = c(fit = "betareg"),
                        contains = c("spec_beta", "mmi_model"))
 
+.make_nb <- setClass("mmi_nb",
+                     slots = c(fit = "negbin"),
+                     contains = c("spec_nb", "mmi_model"))
+
 # Coef methods ----------------------------------------------------------------------
 #' @export
 coef.mmi_model <- function(object) coef(object@fit)[object@trt_levels]
@@ -57,31 +62,32 @@ coef.mmi_model <- function(object) coef(object@fit)[object@trt_levels]
 coef.mmi_lmm <- function(object) fixef(object@fit)[object@trt_levels]
 
 
+# Get model dataframe methods ---------------------------------------------------------
+frame <- function(object, ...) UseMethod("frame")
+
+frame.mmi_model <- function(object, ...) object@fit$model
+frame.mmi_lmm <- function(object, ...) object@fit@frame
+
 # fit_null methods ------------------------------------------------------------------
 #' @export
 fit_null <- function(object, ...) UseMethod("fit_null")
 
 #' @export
-fit_null.mmi_lm <- function(object, ...) lm(object@null_formula, object@fit$model)
+fit_null.mmi_lm <- function(object, ...) lm(object@null_formula, frame(object))
 
 #' @export
-fit_null.mmi_logreg <- function(object, ...) {
-  glm(object@null_formula, object@fit$model, family = "binomial")
-}
+fit_null.mmi_logreg <- function(object, ...) glm(object@null_formula, frame(object),
+                                                 family = "binomial")
 
 #' @export
-fit_null.mmi_beta <- function(object, ...) {
-  betareg(object@null_formula, object@fit$model)
-}
+fit_null.mmi_nb <- function(object, ...) glm.nb(object@null_formula, frame(object))
 
 #' @export
-fit_null.mmi_lmm <- function(object, REML = TRUE) {
-  lmer(object@null_formula, object@fit@frame, REML = REML)
-}
+fit_null.mmi_beta <- function(object, ...) betareg(object@null_formula, frame(object))
 
-
-
-
+#' @export
+fit_null.mmi_lmm <- function(object, REML = TRUE) lmer(object@null_formula, frame(object),
+                                                       REML = REML)
 
 # Variance component estimations ----------------------------------------------------
 #' @export
