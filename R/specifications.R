@@ -304,7 +304,6 @@ fit_model.spec_nb <- function(object, study_frame) {
 #' and then fitting a \code{\linkS4class{lmerMod}} using the formula and the data in study_frame.
 #' @export
 fit_model.spec_lmm <- function(object, study_frame) {
-  browser()
   fm <- get_formula(object)
   fit <- warn(lmer(fm, study_frame), object, "fitting of model")
   trt_levels <- get_trt_levels(object, fit)
