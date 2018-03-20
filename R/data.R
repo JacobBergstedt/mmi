@@ -11,3 +11,6 @@
 #' This data was analyzed in the article "Natural variation in immune cell parameters is preferentially driven by genetic factors"
 #' using the mmi R package.
 "ecrf"
+
+#' Names and annotation for the immunophenotypes in the facs table
+"facs_annotation"
