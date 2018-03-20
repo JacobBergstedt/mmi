@@ -3,7 +3,7 @@
 mmi
 ===
 
-mmi is an R package to conveniently fit and compare many models. It was developed in parallel to the work on the article "Natural variation in immune cell parameters is preferentially driven by genetic factors". The flow cytometry data, as well as the clinical/demographical data analyzed in that article is published within this package. A tutorial on how the package was used to analyze the impact of the clinical/demographical data on immunophenotypes can be found here vignettes/mmi\_facs.pdf.
+mmi is an R package to conveniently fit and compare many models. It was developed in parallel to the work on the article "Natural variation in immune cell parameters is preferentially driven by genetic factors". The flow cytometry data, as well as the clinical/demographical data analyzed in that article is published within this package. A tutorial on how the package was used to analyze the impact of the clinical/demographical data on immunophenotypes can be found [here](vignettes/mmi_facs.pdf).
 
 Installation
 ------------
