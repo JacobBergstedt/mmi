@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>Analysis of the impact of non-genetical factors on immunophenotypes</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Analysis of the impact of non-genetical factors on immunophenotypes</h1>
+
+</div>
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The <em>mmi</em> package was used in the recently published article “Natural variation in immune cell parameters is preferentially driven by genetic factors”, <span class="citation">(Patin et al. 2018)</span>. The article tries to quantify the sources of variation for different functions in the immune system. It includes three different immunophenotypes: counts of immune cells per blood volume, mean flourescence intensity of surface markers per blood volume, and a few ratios between cell counts.</p>
+<p>Determinants of a phenotype are either genetical, <em>i.e</em> differences in the genome of individuals, or non-genetical, intrinsic factors such as age, sex, and various cultural and demographical factors, or an interaction between the two. We focus on genetical and non-genetical factors in the article, leaving out interactions. A total of 166 immunophenotypes are analyzed, measured on 1000 people from France stratified evenly across bins of 10 years, between 20 and 70 years old, and across sex.</p>
+<p>Here we redo the analysis of the impact of non-genetical factor on the immunophenotypes. We do not reproduce the analysis of genetical factors, since we cannot publically release the genetics data due to privacy issues. Also, 184 of the 1000 donors included in the study did not want their data to be publically available. Therefore we only publish data from the remaining 816 donors.</p>
+<p>The analysis is based on functionality implemented <strong>mmi</strong> package. We will not describe the inner workings of the package itself in any detail here, interested readers are pointed to the forthcoming <strong>mmi</strong> package vignette and the forthcoming <strong>mmi</strong> R documentation. Note that the R documentation right now is not updated and is incorrect.</p>
+<p>First we load some libraries:</p>
+<pre class="r"><code>library(tidyverse)
+library(magrittr)
+library(scales)
+library(mmi)</code></pre>
+<p>The immunophenotypes, stored in the variable <em>facs</em>, and the non-genetical variables, stored in the variable <em>ecrf</em>, are loaded to memory with the mmi package:</p>
+<pre class="r"><code>dim(facs)</code></pre>
+<pre><code>## [1] 816 167</code></pre>
+<pre class="r"><code>dim(ecrf)</code></pre>
+<pre><code>## [1] 816  44</code></pre>
+<p>Included in the package is the tibble <em>facs_annotation</em> that stores the names of the immunophenotypes in the <em>facs</em> tibble, cleaned up names used in figures, and information on whether an immune parameter belongs to the adaptive or the innate immune system.</p>
+<p>We will need a tibble including all data:</p>
+<pre class="r"><code>db &lt;- left_join(facs, ecrf)</code></pre>
+<p>We can take a look at the distribution of age and sex in the data after removing donors that did not want their data to be public:</p>
+<pre class="r"><code>table(ecrf$Sex)</code></pre>
+<pre><code>## 
+##   Male Female 
+##    399    417</code></pre>
+<pre class="r"><code>table(cut(ecrf$Age, breaks = c(20, 30, 40, 50, 60, 70)))</code></pre>
+<pre><code>## 
+## (20,30] (30,40] (40,50] (50,60] (60,70] 
+##     122     160     170     188     176</code></pre>
+<p>Originally, each of these bins had 200 donors, so it is apparently mostly young people that are concerned with their data privacy.</p>
+<p>The <em>mmi</em> package includes the function <em>plot_list</em> that conveniently plots histograms of variables in a data frame (actually it plots variables in a list, hence the name, but data frames are lists). We can use it to look at the numerical non-genetical variables:</p>
+<pre class="r"><code>plot_list(select(keep(ecrf, is.numeric), -SUBJID), title_sz = 9)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-5-1.png" width="1000px" style="display: block; margin: auto;" /></p>
+<p>The <em>MetabolicScore</em> variable is a composite variable designed to measure an individuals metabolic health, described in <span class="citation">(S. Thomas et al. 2015)</span>. The <em>HourOfSampling</em> is the hour of the day when the blood sample for the measurement was drawn. The other variables are usual intrinsic factors like age, typical clinical variables like body temperature and heart rate, antibodies for flu (<em>FluIgG</em>), and variables related to mental health. The variable <em>DepressionScore</em> is a composite variable similar to <em>MetabolicScore</em>, that summarizes the other mental health variables.</p>
+<p>We can take a look at the categorical variables by first converting their values to numeric:</p>
+<pre class="r"><code>plot_list(keep(ecrf, function(x) !is.numeric(x)), title_sz = 6)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-6-1.png" width="1000px" style="display: block; margin: auto;" /></p>
+<p>There are some socio-economic variables like level of education and income, and variables related to vaccination and childhood diseases. The variables <em>Sex</em>, <em>CMVInfection</em>, which states if an individual is seropositive for the cytomegalovirus (<a href="https://en.wikipedia.org/wiki/Cytomegalovirus" class="uri">https://en.wikipedia.org/wiki/Cytomegalovirus</a>), and <em>Smoking</em> are key variables in the study. The <em>DayOfSampling</em> variable is what day the blood was drawn for the sample.</p>
+</div>
+<div id="batch-effects" class="section level1">
+<h1>Batch effects</h1>
+<p>Let us look a little closer on the <em>DayOfSampling</em> variable. To see how many donors had blood drawn at a particular day (counted from the first day) we can for instance do:</p>
+<pre class="r"><code>people_each_day &lt;- as.numeric(table(ecrf$DayOfSampling))
+c(mean(people_each_day), 1.96 * sd(people_each_day))</code></pre>
+<pre><code>## [1] 7.698113 4.802294</code></pre>
+<pre class="r"><code>plt_frame &lt;- tibble(day = as.numeric(levels(ecrf$DayOfSampling)),
+                    nr_people = people_each_day)
+
+ggplot(plt_frame, aes(x = day, y = nr_people)) +
+  geom_point(size = 2) +
+  scale_x_continuous(breaks = pretty_breaks(n = 10)) +
+  scale_y_continuous(breaks = seq(1, 12, 1), minor_breaks = NULL) +
+  theme_bw()</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-7-1.png" width="1000px" style="display: block; margin: auto;" /></p>
+<p>So around <span class="math inline">\(7.7 \pm 4.80\)</span> blood samples are drawn each day. To see if there is a batch effect across day of blood draw we can estimate the intraclass correlation coefficient. This is the correlation among observations within the same day (assuming the correlation is the same across days). If this parameter is large it means that the variation between days is larger then the variation within days, indicating a batch effect, since donors where randomly assigned to day of blood draw. The intraclass coefficient can also be interpreted as the proportion of the total variability attributed to variability between days. To compute it we must first setup the models. In this case we only want the day of sampling as a random effect, and we want to build a model for each immunophenotype:</p>
+<pre class="r"><code>spec &lt;- specify(facs_annotation$FACS.NAME, rands = &quot;DayOfSampling&quot;)
+fam &lt;- make_fam(spec, db)
+intraclass &lt;- prop_var(fam)
+select(intraclass, response, prop_var) %&gt;% arrange(desc(prop_var))</code></pre>
+<pre><code>## # A tibble: 166 x 2
+##    response                        prop_var
+##    &lt;chr&gt;                              &lt;dbl&gt;
+##  1 MFI_CCR7_in_CD8bpos_EM.panel1       88.6
+##  2 MFI_CCR7_in_CD4pos_EM.panel1        88.4
+##  3 MFI_CCR7_in_CD8bpos_EMRA.panel1     88.3
+##  4 MFI_CCR7_in_CD8bpos_CM.panel1       86.4
+##  5 CD19_MFI_in_Bcells.panel6           83.2
+##  6 MFI_NEUTROPHILS_FceRI.panel7        83.1
+##  7 MFI_CCR7_in_CD4pos_CM.panel1        77.4
+##  8 MFI_CD16_in_CD14hi_mono.panel5      76.3
+##  9 MFI_CCR7_oin_CD4pos_EMRA.panel1     74.2
+## 10 MFI_HLADR_in_CD56hi.panel4          70.7
+## # ... with 156 more rows</code></pre>
+<p>Apparently, day of blood draw has a huge effect on some immunophenotypes, particularly MFIs. To get a sense of how day of blood draw affects the measurements we can plot immunophenotype values across days. Let us take a look at the 6 immunophenotypes with the largest intraclass coefficient.</p>
+<pre class="r"><code>resp &lt;- intraclass %&gt;%
+  arrange(desc(prop_var)) %&gt;%
+  slice(1:6) %$% response
+
+plt_frame &lt;- db[c(&quot;DayOfSampling&quot;, resp)] %&gt;%
+  gather(key = &quot;Pheno&quot;, value = &quot;Value&quot;, -DayOfSampling)
+
+plt_frame$Pheno &lt;- factor(plt_frame$Pheno, levels = resp)
+
+plt_frame %&gt;%
+  ggplot(aes(x = factor(DayOfSampling), Value)) +
+  geom_boxplot() +
+  theme_bw() +
+  theme(axis.text.x = element_text(size = 4),
+        axis.title = element_blank(),
+        strip.text = element_text(size = 8)) +
+  facet_wrap(~ Pheno, scales = &quot;free&quot;, ncol = 2)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-9-1.png" width="1000px" style="display: block; margin: auto;" /></p>
+<p>As expected, there is considerable between-day variability. Also, the pattern of variability does not look particularly Gaussian: there are outlier days for some phenotypes and the values sometimes seem to jump between blocks of days with similar measurements. There also appears to be autocorrelation in time, <em>i.e</em>, seasonality. We dont make an attempt to model the autocorrelation in any meaningful way in the paper, we just introduce a normal-distributed random effect to adjust for the batch effect.</p>
+<p>We can take a look at how including a random effect controls for the batch effect by using the <strong>residuals</strong> function in the <strong>mmi</strong> package. Note that this function only works if all fitted models has the same predictors.</p>
+<pre class="r"><code>resids &lt;- residuals(fam) %&gt;%
+  filter(response %in% resp)
+resids$response &lt;- factor(resids$response, levels = resp)
+
+resids %&gt;%
+  ggplot(aes(x = factor(DayOfSampling), residuals)) +
+  geom_boxplot() +
+  theme_bw() +
+  theme(axis.text.x = element_text(size = 4),
+        axis.title = element_blank(),
+        strip.text = element_text(size = 8)) +
+  facet_wrap(~ response, scales = &quot;free&quot;, ncol = 2)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-10-1.png" width="1000px" style="display: block; margin: auto;" /></p>
+</div>
+<div id="modeling" class="section level1">
+<h1>Modeling</h1>
+<p>It is well-known that a person’s age affects their immunophenotype. Cytomegalovirus (CMV) serostatus is also a known determinant. Links have also been made between immune parameter levels and sex. We therefore include age and sex as controls for all models, and CMV infection status for absolute cell counts. We also include the batch variable hour of blood draw as a linear predictor for all models.</p>
+<p>There are three different types of immunophenotypes in the study. We also have immune cells at various levels in the immune cell differentiation hierarchy. The further a particular cell is differentiated, the more skewed the distribution tends to be. Almost all immunophenotypes should also be positive. A reasonable way to model such data is often to use a log-normal distribution. However, some phenotypes have zero values. To deal with that we add a unit value to those observations prior to log transformation. The count phenotypes could also be modelled as being distributed according to a negative binomial distribution. We can make a comparison of the normal, lognormal, and negative binomal models using Aikaikes information criteria (AIC).</p>
+<pre class="r"><code>controls &lt;- c(&quot;Age&quot;, &quot;Sex&quot;)
+count_controls &lt;- c(controls, &quot;CMVInfection&quot;)
+
+# Names of counts
+str_only_counts &lt;- facs_annotation$FACS.NAME[grepl(&quot;^N_&quot;, facs_annotation$FACS.NAME)]
+
+# Specify negative binomial models for all counts with the controls 
+# defined above as predictors
+spec_nb &lt;- specify(str_only_counts, controls = count_controls, model = &quot;negbin&quot;)
+
+# Specify normal models
+spec_no &lt;- specify(str_only_counts, controls = count_controls, model = &quot;lm&quot;)
+
+# Specify lognormal models
+spec_logno &lt;- specify(str_only_counts, controls = count_controls, model = &quot;trans_lm&quot;, 
+                      trans = &quot;log&quot;)
+
+# Log normal models cannot include zeros
+facs_with_zero &lt;- map_lgl(facs, ~ any(na.omit(.) &lt;= 0))
+sum(facs_with_zero)
+facs_with_zero &lt;- names(facs[facs_with_zero])
+facs_no_zeros &lt;- facs
+facs_no_zeros[facs_with_zero] &lt;- facs_no_zeros[facs_with_zero] + 1
+db_no_zeros &lt;- left_join(facs_no_zeros, ecrf)
+
+# Here we fit the models
+fam_nb &lt;- make_fam(spec_nb, db)
+fam_no &lt;- make_fam(spec_no, db)
+fam_logno &lt;- make_fam(spec_logno, db_no_zeros)
+
+# The concatenation operator is overloaded for both spec_fam and fam objects
+fam &lt;- c(fam_nb, fam_no, fam_logno)
+
+# Compute AIC
+AIC_comp &lt;- AIC(fam)
+
+# We sort the phenotypes according to AIC value for the normal model
+sort_resp &lt;- AIC_comp %&gt;%
+  filter(model == &quot;mmi_lm&quot;, trans == &quot;log&quot;) %&gt;%
+  arrange(desc(AIC)) %$%
+  response
+
+# Fixing some nice labels
+anno &lt;- left_join(tibble(FACS.NAME = sort_resp), facs_annotation)
+AIC_comp$legend &lt;- factor(AIC_comp$response, anno$FACS.NAME)
+levels(AIC_comp$legend) &lt;- anno$FACS.DESC
+AIC_comp$model &lt;- factor(paste0(AIC_comp$model, &quot;x&quot;, AIC_comp$trans))
+levels(AIC_comp$model) &lt;- c(&quot;Normal&quot;, &quot;Lognormal&quot;, &quot;Negative binomial&quot;)
+
+# Comparison plot
+AIC_comp %&gt;%
+  ggplot(aes(x = legend, y = AIC, group = model, colour = model)) +
+  geom_line() +
+  scale_y_continuous(breaks = pretty_breaks(20)) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = rel(0.6)),
+        axis.title = element_blank())</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-11-1.png" width="1000px" style="display: block; margin: auto;" /></p>
+<p>Using a normal distribution for the model of the response performs the worst for almost all phenotypes. The distinction between the log-normal and the negative binomial model is less clear, but the negative binomial model seems to have the advantage. We can try to investigate by plotting the qq-plots of the models that differed the most. First we plot qq-plots from the negative binomial models:</p>
+<pre class="r"><code># Compute difference in AIC between negative binomial and lognormal models
+aic_diff &lt;- AIC_comp %&gt;%
+  filter(model != &quot;Normal&quot;) %&gt;%
+  arrange(response, AIC) %&gt;%
+  group_by(response) %&gt;%
+  summarize(diff_models = diff(AIC), best_model = first(model)) %&gt;%
+  arrange(diff_models)
+
+# Find the 10 immunophenotypes that differed the most
+top_10_nb &lt;- aic_diff %&gt;%
+  filter(best_model == &quot;Negative binomial&quot;) %&gt;%
+  tail(10) %&gt;%
+  dplyr::select(response)
+
+res &lt;- residuals(fam_nb) %&gt;%
+  dplyr::select(-predictors, -trans)
+
+res %&gt;%
+  filter(response %in% top_10_nb$response) %&gt;%
+  ggplot(aes(x = expected_norm, y = residuals)) +
+  geom_point(size = 0.8) +
+  theme_bw() +
+  theme(strip.text = element_text(size = 6),
+        axis.title = element_blank()) +
+  facet_wrap(~ response, scales = &quot;free&quot;, ncol = 3)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-12-1.png" width="1000px" style="display: block; margin: auto;" /></p>
+<p>Then we plot the qq-plots from the log-normal models.</p>
+<pre class="r"><code>res &lt;- residuals(fam_logno) %&gt;%
+  dplyr::select(-predictors, -trans)
+
+res %&gt;%
+  filter(response %in% top_10_nb$response) %&gt;%
+  ggplot(aes(x = expected_norm, y = residuals)) +
+  geom_point(size = 0.8) +
+  theme_bw() +
+  theme(strip.text = element_text(size = 6),
+        axis.title = element_blank()) +
+  facet_wrap(~ response, scales = &quot;free&quot;, ncol = 3)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-13-1.png" width="1000px" style="display: block; margin: auto;" /></p>
+<p>It is clear that the log-link in the negative binomial model and the log transformation in the log-normal model is not appropriate for the smallest values of these response variables. This appears to be problem for all the 10 response variables where the AIC differed the most between the models. It may be that the negative binomial model somehow deals better with the problem of misspecification for small values, although it cannot be easily discerned from the qq-plots.</p>
+<p>It doesn’t make sense to use a count distribution for the ratio and MFI phenotypes so for those we only compare the normal and the log-normal distribution,</p>
+<pre class="r"><code>controls &lt;- c(&quot;Age&quot;, &quot;Sex&quot;, &quot;Smoking&quot;, &quot;CMVInfection&quot;)
+
+# MFI names
+str_mfis &lt;- facs_annotation$FACS.NAME[grepl(&quot;^MFI_&quot;, facs_annotation$FACS.NAME)]
+spec &lt;- specify(str_mfis, controls = controls, model = &quot;lm&quot;)
+spec &lt;- c(spec,
+          specify(str_mfis, controls = controls,
+                  model = &quot;trans_lm&quot;,
+                  trans = &quot;log&quot;))
+
+
+fam &lt;- make_fam(spec, db_no_zeros)
+AIC_comp &lt;- AIC(fam)
+
+sort_resp &lt;- AIC_comp %&gt;%
+  filter(model == &quot;mmi_lm&quot;, trans == &quot;log&quot;) %&gt;%
+  arrange(desc(AIC)) %$%
+  response
+anno &lt;- left_join(tibble(FACS.NAME = sort_resp), facs_annotation)
+AIC_comp$response &lt;- factor(AIC_comp$response, anno$FACS.NAME)
+levels(AIC_comp$response) &lt;- anno$FACS.DESC
+AIC_comp$model &lt;- factor(paste0(AIC_comp$model, &quot;x&quot;, AIC_comp$trans))
+levels(AIC_comp$model) &lt;- c(&quot;Normal&quot;, &quot;Lognormal&quot;)
+
+AIC_comp %&gt;%
+  ggplot(aes(x = response, y = AIC, group = model, colour = model)) +
+  geom_line() +
+  scale_y_continuous(breaks = pretty_breaks(20)) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = rel(0.6)),
+        axis.title = element_blank())</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-14-1.png" width="1000px" style="display: block; margin: auto;" /></p>
+<p>The two models appear to be similar, with some spikes in the normal model for some response variables. Overall the log-normal model works relatively well for all data, and in the interest of comparison between parameters we choose to model all response variables as being log-normally distributed. Note also that these comparisons have been done without the <em>DayOfSampling</em> random effect. Theoretically, adding a random effect would not change the relative performance of the models. However, (at least in our experience) the fitting of negative binomial random effects models is less robust than its linear counterpart.</p>
+</div>
+<div id="inference" class="section level1">
+<h1>Inference</h1>
+<p>We will fit a model for each response variable and each treatment variable, for a total of 6806 models. The models will be fit by the <strong>mmi</strong> package using functions from the <strong>lme4</strong> package. We will use age, sex, and the hour of blood draw as covariates for all models, and we add CMV infection status as a covariate for absolute counts and ratios. We regard all 6806 models as one multiple testing family, and we use the false discovery rate as error rate <span class="citation">(Benjamini and Hochberg 1995)</span>. We test the hypothesis that the linear regression parameter for the treatment variable on a particular response variable is zero using the kenward-rogers approximation of the F-test <span class="citation">(Kenward and Roger 1997)</span>. We construct confidence intervals using the implementation in the <strong>lme4</strong> package, which uses the profile likelihood <span class="citation">(Bates et al. 2014)</span>. We only construct and show confidence intervals for parameters that are significant on the 0.01 level. To correct for this selection we widen the confidence intervals using the false coverage rate (FCR) procedure <span class="citation">(Benjamini and Yekutieli 2005)</span>. The confidence intervals are constructed to have an FCR of 0.01.</p>
+<p>First we create the specifications and fit the models,</p>
+<pre class="r"><code>controls_mfis &lt;- c(&quot;HourOfSampling&quot;, &quot;Sex&quot;, &quot;Age&quot;)
+controls_counts &lt;- c(&quot;HourOfSampling&quot;, &quot;Sex&quot;, &quot;Age&quot;, &quot;CMVInfection&quot;)
+
+# Define treatmets
+str_treatments &lt;- names(ecrf)
+str_treatments &lt;- str_treatments[!str_treatments %in% 
+                                   c(&quot;SUBJID&quot;, &quot;HourOfSampling&quot;, &quot;DayOfSampling&quot;)]
+spec_mfis &lt;- specify(str_mfis,
+                     str_treatments,
+                     controls = controls_mfis,
+                     trans = &quot;log&quot;,
+                     model = &quot;trans_lmm&quot;,
+                     rands = &quot;DayOfSampling&quot;)
+str_counts_and_ratios &lt;- facs_annotation$FACS.NAME[grepl(&quot;^N_&quot;, facs_annotation$FACS.NAME)]
+spec_counts &lt;- specify(str_counts_and_ratios,
+                       str_treatments,
+                       controls = controls_counts,
+                       trans = &quot;log&quot;,
+                       model = &quot;trans_lmm&quot;,
+                       rands = &quot;DayOfSampling&quot;)
+spec &lt;- c(spec_mfis, spec_counts)
+spec</code></pre>
+<pre><code>## spec_fam object of length 5207. 
+## Contains: 
+## 5207 spec_trans_lmm objects, 127 response variables, and 41 treatment variables</code></pre>
+<pre class="r"><code>fam &lt;- make_fam(spec, db_no_zeros)
+fam</code></pre>
+<pre><code>## fam object of length 5207. 
+## Contains: 
+## 5207 mmi_lmm objects, 127 response variables, and 41 treatment variables</code></pre>
+<p>Note that this procedure is quite memory intensive. There are functions in the package that are designed to have a smaller memory footprint, see the forthcoming package vignette for more information. Next we do the hypothesis tests and then construct the FCR-adjusted confidence intervals. Such confidence intervals can be constructed by the function <em>select_confidence</em>:</p>
+<pre class="r"><code>hyp &lt;- ft(fam)
+selected_confs &lt;- select_confidence(fam, hyp, thresh = 0.01, level = 0.99)
+
+# Add some metadata
+selected_confs &lt;- left_join(selected_confs, facs_annotation, 
+                            by = c(&quot;response&quot; = &quot;FACS.NAME&quot;)) %&gt;% 
+  select(-response) %&gt;% 
+  rename(response = FACS.DESC)</code></pre>
+<p>There are 140 parameters significant on the 0.01 level. Printing and arranging, we see that the strongest signals are found for CMV infection status, age, and smoking:</p>
+<pre class="r"><code>left_join(hyp, facs_annotation, by = c(&quot;response&quot; = &quot;FACS.NAME&quot;)) %&gt;% 
+  select(-response, -test, -Type) %&gt;% 
+  rename(response = FACS.DESC) %&gt;% 
+  arrange(FDR)</code></pre>
+<pre><code>## # A tibble: 5,207 x 4
+##    treatment           p      FDR response                  
+##    &lt;chr&gt;           &lt;dbl&gt;    &lt;dbl&gt; &lt;chr&gt;                     
+##  1 CMVInfection 8.07e-92 4.20e-88 EMRA CD4+ T cells         
+##  2 Age          3.37e-80 8.78e-77 naive CD8+ T cells        
+##  3 CMVInfection 1.18e-62 2.06e-59 HLA-DR+ EMRA CD4+ T cells 
+##  4 CMVInfection 2.14e-59 2.78e-56 EMRA CD8+ T cells         
+##  5 CMVInfection 3.64e-43 3.79e-40 HLA-DR+ EMRA CD8+ T cells 
+##  6 CMVInfection 1.17e-38 1.02e-35 EM CD4+ T cells           
+##  7 CMVInfection 2.51e-33 1.87e-30 HLA-DR+ in EM CD4+ T cells
+##  8 Age          2.71e-31 1.76e-28 CD4- CD8- MAIT cells      
+##  9 Age          6.84e-31 3.95e-28 CD8b- CD4- T cells        
+## 10 Age          5.39e-28 2.80e-25 naive Treg                
+## # ... with 5,197 more rows</code></pre>
+<p>Finally, we plot the confidence intervals of the significant parameters as we do in the paper. Here, we color the effects based on if the immunophenotype is a part of the adaptive or the innate immune system. Since we have to do this four times it is convenient to define a function that sets up the plot:</p>
+<pre class="r"><code>plot_effects &lt;- function(frame, title) {
+  plt_frame %&gt;%  
+    ggplot(aes(x = reorder(response, desc(est)), y = est, 
+               ymin = FCR_lower, ymax = FCR_higher, colour = Type)) +
+    geom_errorbar(width = 0.6, size = 1.5) +
+    geom_point(size = 2, shape = 21, fill = &quot;white&quot;) +
+    scale_y_continuous(breaks = pretty_breaks(10)) +
+    ylab(&quot;Effect Size&quot;) +
+    geom_hline(aes(yintercept = 1), colour = &quot;black&quot;) +
+    coord_flip() +
+    ggtitle(title) +
+    xlab(NULL) +
+    theme_bw() +
+    theme(axis.text = element_text(size = 8))  
+}</code></pre>
+<p>Now we can produce the plots. Note that these will not be exactly the same as the plots in the paper because in the paper we also control for genome-wide significant SNPs, and also because of the observations removed due to privacy reasons:</p>
+<pre class="r"><code>plt_frame &lt;- selected_confs %&gt;% filter(treatment == &quot;CMVInfection&quot;)
+plot_effects(plt_frame, &quot;CMVInfection&quot;)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-19-1.png" width="1000px" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plt_frame &lt;- selected_confs %&gt;% filter(treatment == &quot;Age&quot;)
+plot_effects(plt_frame, &quot;Age&quot;)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-19-2.png" width="1000px" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plt_frame &lt;- selected_confs %&gt;% filter(treatment == &quot;Sex&quot;)
+plot_effects(plt_frame, &quot;Sex&quot;)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-19-3.png" width="1000px" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plt_frame &lt;- selected_confs %&gt;% filter(treatment == &quot;Smoking&quot;, 
+                                       treatment_levels == &quot;SmokingActive&quot;)
+plot_effects(plt_frame, &quot;Active Smoker&quot;)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-19-4.png" width="1000px" style="display: block; margin: auto;" /></p>
+</div>
+<div id="references" class="section level1 unnumbered">
+<h1>References</h1>
+<div id="refs" class="references">
+<div id="ref-bates2014">
+<p>Bates, Douglas, Martin Maechler, Ben Bolker, Steven Walker, and others. 2014. “Lme4: Linear Mixed-Effects Models Using Eigen and S4.” <em>R Package Version</em> 1 (7): 1–23.</p>
+</div>
+<div id="ref-benjamini1995">
+<p>Benjamini, Yoav, and Yosef Hochberg. 1995. “Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing.” <em>Journal of the Royal Statistical Society. Series B (Methodological)</em> 57 (1). [Royal Statistical Society, Wiley]: 289–300. <a href="http://www.jstor.org/stable/2346101" class="uri">http://www.jstor.org/stable/2346101</a>.</p>
+</div>
+<div id="ref-benjamini2005">
+<p>Benjamini, Yoav, and Daniel Yekutieli. 2005. “False Discovery Rate–adjusted Multiple Confidence Intervals for Selected Parameters.” <em>Journal of the American Statistical Association</em> 100 (469). Taylor &amp; Francis: 71–81.</p>
+</div>
+<div id="ref-kenward1997">
+<p>Kenward, Michael G, and James H Roger. 1997. “Small Sample Inference for Fixed Effects from Restricted Maximum Likelihood.” <em>Biometrics</em>. JSTOR, 983–97.</p>
+</div>
+<div id="ref-patin2018">
+<p>Patin, Etienne, Milena Hasan, Jacob Bergstedt, Vincent Rouilly, Valentina Libri, Alejandra Urrutia, Cécile Alanio, et al. 2018. “Natural Variation in the Parameters of Innate Immune Cells Is Preferentially Driven by Genetic Factors.” <em>Nature Immunology</em> 19 (3): 302–14. doi:<a href="https://doi.org/10.1038/s41590-018-0049-7">10.1038/s41590-018-0049-7</a>.</p>
+</div>
+<div id="ref-thomas2015">
+<p>Thomas, Stéphanie, Vincent Rouilly, Etienne Patin, Cécile Alanio, Annick Dubois, Cécile Delval, Louis-Guillaume Marquier, et al. 2015. “The Milieu Intérieur Study — an Integrative Approach for Study of Human Immunological Variance.” <em>Clinical Immunology</em> 157 (2): 277–93. doi:<a href="https://doi.org/https://doi.org/10.1016/j.clim.2014.12.004">https://doi.org/10.1016/j.clim.2014.12.004</a>.</p>
+</div>
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

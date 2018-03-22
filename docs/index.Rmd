@@ -1,6 +1,5 @@
 ---
 title: "Analysis of the impact of non-genetical factors on immunophenotypes"
-output: pdf_document
 bibliography: /work/jacoba/Dropbox/bibliography.bib
 ---
 
@@ -160,7 +159,7 @@ spec_logno <- specify(str_only_counts, controls = count_controls, model = "trans
                       trans = "log")
 
 # Log normal models cannot include zeros
-facs_with_zero <- map_lgl(facs, any_leq_zero)
+facs_with_zero <- map_lgl(facs, ~ any(na.omit(.) <= 0))
 sum(facs_with_zero)
 facs_with_zero <- names(facs[facs_with_zero])
 facs_no_zeros <- facs
