@@ -20,8 +20,8 @@ mmi is an R package to conveniently fit and compare many models. It was develope
 
 You can install mmi from github with:
 
-```{r gh-installation, eval = FALSE}
-# install.packages("devtools")
+```{r, eval = FALSE}
+install.packages("devtools")
 devtools::install_github("JacobBergstedt/mmi")
 ```
 
