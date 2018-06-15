@@ -211,7 +211,7 @@ c.fam <- function(...) {
 #' corresponding S3 method, and the binds the information together in a tidy way.
 #' @export
 confidence.fam <- function(object, level = 0.95) {
-    purrr::map_dfr(object, confidence, level = level)
+    map_dfr(object, confidence, level = level)
 }
 
 #' @describeIn test
@@ -220,7 +220,7 @@ confidence.fam <- function(object, level = 0.95) {
 #' @export
 test.fam <- function(object) {
   all_has_treatments(object)
-  tib <- purrr::map_dfr(object, test)
+  tib <- map_dfr(object, test)
   tib$FDR <- stats::p.adjust(tib$p, "fdr")
   tib
 }
@@ -232,7 +232,7 @@ test.fam <- function(object) {
 #' @export
 lrt.fam <- function(object) {
   all_has_treatments(object)
-  tib <- purrr::map_dfr(object, lrt)
+  tib <- map_dfr(object, lrt)
   tib$FDR <- stats::p.adjust(tib$p, "fdr")
   tib
 }
@@ -240,7 +240,7 @@ lrt.fam <- function(object) {
 #' @export
 ft.fam <- function(object) {
   all_has_treatments(object)
-  tib <- purrr::map_dfr(object, ft)
+  tib <- map_dfr(object, ft)
   tib$FDR <- stats::p.adjust(tib$p, "fdr")
   tib
 }
@@ -248,14 +248,14 @@ ft.fam <- function(object) {
 #' @export
 wald.fam <- function(object) {
   all_has_treatments(object)
-  tib <- purrr::map_dfr(object, wald)
+  tib <- map_dfr(object, wald)
   tib$FDR <- stats::p.adjust(tib$p, "fdr")
   tib
 }
 
 #' @export
 prop_var.fam <- function(object) {
-  purrr::map_dfr(object, prop_var)
+  map_dfr(object, prop_var)
 }
 
 #' @export
@@ -272,12 +272,12 @@ do_fam_inference <- function(spec, data, conf_level = 0.01, selection_thresh = 0
 # Fam comparison methods ------------------------------------------------------------
 #' @export
 residuals.fam <- function(object) {
-  purrr::map_dfr(object, residuals)
+  map_dfr(object, residuals)
 }
 
 #' @export
 AIC.fam <- function(object) {
-  purrr::map_dfr(object, AIC)
+  map_dfr(object, AIC)
 }
 
 # Inference methods for spec_fam -----------------------------------------------------
@@ -287,7 +287,7 @@ confidence.spec_fam <- function(object, level = 0.95, study_frame, nr_cores = 1)
     confidence(fit_model(spec, study_frame), level = level)
   }
   if (nr_cores == 1) {
-    purrr::map_dfr(object, fit_and_get_confs, level = level, study_frame = study_frame)
+    map_dfr(object, fit_and_get_confs, level = level, study_frame = study_frame)
   } else {
     cl <- parallel::makePSOCKcluster(nr_cores)
     parallel::clusterExport(cl, c("level", "study_frame"), envir = environment())
@@ -306,7 +306,7 @@ test.spec_fam <- function(object, study_frame, nr_cores = 1) {
     test(fit_model(spec, study_frame))
   }
   if (nr_cores == 1) {
-    tib <- purrr::map_dfr(object, fit_and_get_tests, study_frame = study_frame)
+    tib <- map_dfr(object, fit_and_get_tests, study_frame = study_frame)
   } else {
     cl <- parallel::makePSOCKcluster(nr_cores)
     parallel::clusterExport(cl, c("study_frame"), envir = environment())
@@ -331,7 +331,7 @@ inference.spec_fam <- function(object, study_frame, level, nr_cores = 1) {
     left_join(confidence(m, level = level), test(m), by = c("response", "treatment"))
   }
   if (nr_cores == 1) {
-    tib <- purrr::map_dfr(object, fit_and_get_inference_results, level = level,
+    tib <- map_dfr(object, fit_and_get_inference_results, level = level,
                    study_frame = study_frame)
     tib$FDR <- p.adjust(tib$p, "fdr")
     tib

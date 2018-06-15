@@ -86,8 +86,10 @@ fit_null.mmi_nb <- function(object, ...) glm.nb(object@null_formula, frame(objec
 fit_null.mmi_beta <- function(object, ...) betareg(object@null_formula, frame(object))
 
 #' @export
-fit_null.mmi_lmm <- function(object, REML = TRUE) lmer(object@null_formula, frame(object),
-                                                       REML = REML)
+fit_null.mmi_lmm <- function(object, REML = TRUE) {
+  study_frame = frame(object)
+  lmer(object@null_formula, study_frame, REML = REML)
+}
 
 # Variance component estimations ----------------------------------------------------
 #' @export

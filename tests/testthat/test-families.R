@@ -1,38 +1,39 @@
 context("families")
-set.seed(10)
-iris <- cbind(iris, Bin = purrr::rbernoulli(nrow(iris), 0.5))
-sfam_lm <- specify(responses = names(iris)[1], treatments = names(iris)[-1], model = "lm")
-sfam_trans_lm <- specify(responses = names(iris)[1], treatments = names(iris)[-1],
-                         model = "trans_lm", trans = "log10")
-sfam_logreg <- specify(responses = "Bin", treatments = names(iris)[-ncol(iris)], model = "logreg")
-sfam_lmm <- specify(responses = "Sepal.Length",
-                   treatments = c("Sepal.Width", "Petal.Length", "Bin"),
-                   rands = "Species",
-                   model = "lmm")
-sfam_lmm2 <- specify(responses = "Sepal.Length",
-                     treatments = c("Sepal.Width", "Petal.Length", "Bin"),
-                     rands = "Species",
-                     model = "lmm")
+db <- dplyr::left_join(facs, ecrf)
 
-sfam_trans_lmm <- specify(responses = "Sepal.Length",
-                    treatments = c("Sepal.Width", "Petal.Length", "Bin"),
-                    rands = "Species",
-                    model = "lmm",
-                    trans = "log10")
+sfam_lm <- specify(responses = "N_CD8bpos_EMRA.panel1", treatments = "Smoking",
+                   controls = c("Age", "Sex"))
 
-sfam_only_rands <- specify(responses = "Sepal.Length",
-                           rands = "Species",
-                           model = "lmm",
-                           trans = "log10")
+sfam_trans_lm <- specify(responses = "N_CD8bpos_EMRA.panel1", treatments = "Smoking",
+                   controls = c("Age", "Sex"), trans = "log")
 
-sfam_trans_lmm_from_list <- list(list(response = "Sepal.Length", treatment = "Sepal.Width",
-                                      rands = "Species", model = "lmm", trans = "log10"),
-                                 list(response = "Sepal.Length", treatment = "Petal.Length",
-                                      rands = "Species", model = "lmm", trans = "log10"),
-                                 list(response = "Sepal.Length", treatment = "Bin",
-                                      rands = "Species", model = "lmm", trans = "log10"))
-names(sfam_trans_lmm_from_list) <- paste0(c("Sepal.Length"), "_", c("Sepal.Width", "Petal.Length", "Bin"))
+sfam_logreg <- specify(responses = "CMVPositiveSerology",
+                       treatments = "Smoking",
+                       controls = c("Age", "Sex"),
+                       model = "logreg")
+
+sfam_lmm <- specify(responses = "N_CD8bpos_EMRA.panel1", treatments = "Smoking",
+                   controls = c("Age", "Sex"),
+                   rands = "DayOfSampling")
+
+sfam_trans_lmm <- specify(responses = "N_CD8bpos_EMRA.panel1", treatments = "Smoking",
+                    controls = c("Age", "Sex"),
+                    trans = "log",
+                    rands = "DayOfSampling")
+
+sfam_only_rands <- specify(responses = "N_CD8bpos_EMRA.panel1",
+                    controls = c("Age", "Sex"),
+                    trans = "log",
+                    rands = "DayOfSampling")
+
+sfam_trans_lmm_from_list <- list(list(response = "N_CD8bpos_EMRA.panel1", treatment = "Age",
+                                      rands = "DayOfSampling", model = "lmm", trans = "log"),
+                                 list(response = "N_CD8bpos_EMRA.panel1", treatment = "CMVPositiveSerology",
+                                      controls = "Age", rands = "DayOfSampling",
+                                      model = "lmm", trans = "log"))
+names(sfam_trans_lmm_from_list) <- paste0(c("N_CD8bpos_EMRA.panel1"), "_", c("Age", "CMVPositiveSerology"))
 sfam_trans_lmm_from_list <- specify_with_list(sfam_trans_lmm_from_list)
+
 
 test_that("Spec families are created correctly", {
   expect_s4_class(sfam_lm, "spec_fam")
@@ -56,17 +57,15 @@ test_that("Spec subset operators are working", {
   expect_s4_class(sfam_logreg[1], "spec_fam")
   expect_s4_class(sfam_trans_lm[1], "spec_fam")
   expect_s4_class(sfam_trans_lmm[1], "spec_fam")
-
-  expect_equal(sfam_lm[1:2]@treatments, c("Sepal.Width", "Petal.Length"))
 })
 
 
-fam_lm <- make_fam(sfam_lm, iris)
-fam_trans_lm <- make_fam(sfam_trans_lm, iris)
-fam_logreg <- make_fam(sfam_logreg, iris)
-fam_lmm <- make_fam(sfam_lmm, iris)
-fam_trans_lmm <- make_fam(sfam_trans_lmm, iris)
-fam_only_rands <- make_fam(sfam_only_rands, iris)
+fam_lm <- make_fam(sfam_lm, db)
+fam_trans_lm <- make_fam(sfam_trans_lm, db)
+fam_logreg <- make_fam(sfam_logreg, db)
+fam_lmm <- make_fam(sfam_lmm, db)
+fam_trans_lmm <- make_fam(sfam_trans_lmm, db)
+fam_only_rands <- make_fam(sfam_only_rands, db)
 
 test_that("Families are created correctly", {
   expect_s4_class(fam_lm, "fam")
@@ -81,34 +80,18 @@ test_that("Families are created correctly", {
   expect_s3_class(fam_logreg[[1]]@fit, "glm")
   expect_s4_class(fam_lmm[[1]]@fit, "lmerMod")
   expect_s4_class(fam_trans_lmm[[1]]@fit, "lmerMod")
-
-  expect_equal_to_reference(fam_lm, "fam_lm.rds")
-  expect_equal_to_reference(fam_trans_lm, "fam_trans_lm.rds")
-  expect_equal_to_reference(fam_logreg, "fam_logreg.rds")
 })
 
 test_that("Methods on families are OK", {
-  expect_error(lrt(fam_only_rands),
-               "All model objects must have treatments for this function")
-  expect_s3_class(lrt(fam_lm), "tbl_df")
-  expect_s3_class(lrt(fam_trans_lm), "tbl_df")
-  expect_s3_class(lrt(fam_logreg), "tbl_df")
-  expect_s3_class(lrt(fam_lmm), "tbl_df")
-  expect_s3_class(lrt(fam_trans_lmm), "tbl_df")
+  expect_equal_to_reference(confidence(fam_lm), "confidence_fam_lm.rds")
+  expect_equal_to_reference(confidence(fam_trans_lm), "confidence_fam_trans_lm.rds")
+  expect_equal_to_reference(confidence(fam_logreg), "confidence_fam_logreg.rds")
+  expect_equal_to_reference(confidence(fam_lmm), "confidence_fam_lmm.rds")
+  expect_equal_to_reference(confidence(fam_trans_lmm), "confidence_fam_trans_lmm.rds")
 
-  expect_s3_class(test(fam_lm), "tbl_df")
-  expect_s3_class(test(fam_trans_lm), "tbl_df")
-  expect_s3_class(test(fam_logreg), "tbl_df")
-  expect_s3_class(test(fam_lmm), "tbl_df")
-  expect_s3_class(test(fam_trans_lmm), "tbl_df")
-
-  expect_s3_class(confidence(fam_lm), "tbl_df")
-  expect_s3_class(confidence(fam_trans_lm), "tbl_df")
-  expect_s3_class(confidence(fam_logreg), "tbl_df")
-  expect_s3_class(confidence(fam_lmm), "tbl_df")
-  expect_s3_class(confidence(fam_trans_lmm), "tbl_df")
-
-  expect_equal(nrow(prop_var(fam_only_rands)), 1)
+  expect_equal_to_reference(test(fam_lm), "test_fam_lm.rds")
+  expect_equal_to_reference(test(fam_trans_lm), "test_fam_trans_lm.rds")
+  expect_equal_to_reference(test(fam_logreg), "test_fam_logreg.rds")
+  expect_equal_to_reference(test(fam_lmm), "test_fam_lmm.rds")
+  expect_equal_to_reference(test(fam_trans_lmm), "test_fam_trans_lmm.rds")
 })
-
-remove(iris)

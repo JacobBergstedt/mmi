@@ -51,14 +51,14 @@ lrt <- function(object) UseMethod("lrt")
 #' slot fit and sets up a tidy tibble for the result.
 #' @export
 lrt.mmi_model <- function(object) {
-  p <- anova(object@fit, fit_null(object, REML = FALSE), test = "LRT")[-1, "Pr(>Chi)"]
-  setup_lrt_tib(object, p, "lrt")
+  null <- fit_null(object)
+  setup_lrt_tib(object, p_lrt(logLik(null), logLik(object@fit)), "lrt")
 }
 
 #' @export
-lrt.mmi_beta <- function(object) {
-  null <- fit_null(object)
-  setup_lrt_tib(object, p_lrt(logLik(null), logLik(object@fit)), "lrt")
+lrt.mmi_lmm <- function(object) {
+  null <- fit_null(object, REML = FALSE)
+  setup_lrt_tib(object, p_lrt(logLik(null), logLik(refitML(object@fit))), "lrt")
 }
 
 # ft --------------------------------------------------------------------------------

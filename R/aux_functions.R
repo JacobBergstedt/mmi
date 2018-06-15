@@ -20,8 +20,8 @@ all_has_treatments <- function(fam) {
 }
 
 interacting_vars <- function(str) {
-  left <- str_extract(str, "[:graph:]+(?= ?\\* ?)")
-  right <- str_extract(str, "(?<= ?\\* ?)[:graph:]+")
+  left <- str_extract(str, "[:graph:]+(?= ?(\\*|:) ?)")
+  right <- str_extract(str, "(?<= ?(\\*|:) ?)[:graph:]+")
   list(left = left, right = right)
 }
 
