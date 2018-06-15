@@ -8,9 +8,9 @@ setOldClass("negbin")
 
 # mmi_model classes -------------------------------------------------------
 .make_model <- setClass("mmi_model",
-                        slots = c(trt_levels = "character",
-                                  formula = "formula",
-                                  null_formula = "formula"))
+                        slots = c(var_labels = "character",
+                                  str_formula = "formula",
+                                  str_null_formula = "formula"))
 
 #' S4 class for representing a linear model specification and a fit to that specification.
 #'
@@ -56,15 +56,14 @@ setOldClass("negbin")
 
 # Coef methods ----------------------------------------------------------------------
 #' @export
-coef.mmi_model <- function(object) coef(object@fit)[object@trt_levels]
+coef.mmi_model <- function(object) coef(object@fit)[object@var_labels]
 
 #' @export
-coef.mmi_lmm <- function(object) fixef(object@fit)[object@trt_levels]
+coef.mmi_lmm <- function(object) fixef(object@fit)[object@var_labels]
 
 
 # Get model dataframe methods ---------------------------------------------------------
 frame <- function(object, ...) UseMethod("frame")
-
 frame.mmi_model <- function(object, ...) object@fit$model
 frame.mmi_lmm <- function(object, ...) object@fit@frame
 
@@ -73,22 +72,22 @@ frame.mmi_lmm <- function(object, ...) object@fit@frame
 fit_null <- function(object, ...) UseMethod("fit_null")
 
 #' @export
-fit_null.mmi_lm <- function(object, ...) lm(object@null_formula, frame(object))
+fit_null.mmi_lm <- function(object, ...) lm(as.formula(object@str_null_formula), frame(object))
 
 #' @export
-fit_null.mmi_logreg <- function(object, ...) glm(object@null_formula, frame(object),
+fit_null.mmi_logreg <- function(object, ...) glm(as.formula(object@str_null_formula), frame(object),
                                                  family = "binomial")
 
 #' @export
-fit_null.mmi_nb <- function(object, ...) glm.nb(object@null_formula, frame(object))
+fit_null.mmi_nb <- function(object, ...) glm.nb(as.formula(object@str_null_formula), frame(object))
 
 #' @export
-fit_null.mmi_beta <- function(object, ...) betareg(object@null_formula, frame(object))
+fit_null.mmi_beta <- function(object, ...) betareg(as.formula(object@str_null_formula), frame(object))
 
 #' @export
 fit_null.mmi_lmm <- function(object, REML = TRUE) {
   study_frame = frame(object)
-  lmer(object@null_formula, study_frame, REML = REML)
+  lmer(as.formula(object@str_null_formula), study_frame, REML = REML)
 }
 
 # Variance component estimations ----------------------------------------------------
