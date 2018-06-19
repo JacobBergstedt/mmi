@@ -3,8 +3,8 @@ default_control <- function() {
                     optCtrl = list(maxeval = 1e4, xtol_abs = 1e-8, ftol_abs = 1e-8))
 }
 
-est_sandwich_se <- function(fit, trt_levels) {
-  v <- sandwich::vcovHC(fit)[trt_levels, trt_levels]
+est_sandwich_se <- function(fit, var_labels) {
+  v <- sandwich::vcovHC(fit)[var_labels, var_labels]
   if (is.matrix(v)) v <- diag(v)
   sqrt(v)
 }
@@ -13,15 +13,32 @@ get_slots <- function(fam, slot) {
   unique(unlist(map(fam, slot)))
 }
 
+find_response <- function(str_response_fm) {
+  str_response_fm <- str_replace_all(str_response_fm, "[[:space:]]", "")
+  if (str_detect(str_response_fm, "\\(") & str_detect(str_response_fm, "\\)")) {
+    str_extract(str_response_fm, "(?<=\\().*(?=\\))")
+  } else str_response_fm
+
+}
+
+find_trans <- function(str_response_fm) {
+  str_response_fm <- str_replace_all(str_response_fm, "[[:space:]]", "")
+  if (str_detect(str_response_fm, "\\(") & str_detect(str_response_fm, "\\)")) {
+    str_extract(str_response_fm, ".*(?=\\()")
+  } else "identity"
+}
+
 all_has_treatments <- function(fam) {
-  if (is.null(unlist(map(fam, "treatment")))) {
+  if (is.null(unlist(map(fam, "str_treatment_fm")))) {
     stop("All model objects must have treatments for this function")
   }
 }
 
-interacting_vars <- function(str) {
-  left <- str_extract(str, "[:graph:]+(?= ?(\\*|:) ?)")
-  right <- str_extract(str, "(?<= ?(\\*|:) ?)[:graph:]+")
+interacting_vars <- function(str, mf) {
+  left <- str_extract(str, ".*(?=\\*|:)")
+  right <- str_extract(str, "(?<=\\*|:).*")
+  left <- paste0(left, levels(mf[[left]])[-1])
+  right <- paste0(right, levels(mf[[right]])[-1])
   list(left = left, right = right)
 }
 
@@ -83,25 +100,17 @@ setup_AIC_tib <- function(object, val) {
          trans = object@trans)
 }
 
-setup_lrt_tib <- function(obj, p, test) {
-  tibble(response = obj@response,
-         treatment = obj@treatment,
-         test = test,
-         p = p)
-}
-
-setup_test_tib <- function(obj, p, test) {
-  tibble(response = obj@response,
-         treatment = obj@treatment,
-         treatment_levels = obj@trt_levels,
+setup_lrt_tib <- function(object, p, test) {
+  tibble(response = object@response,
+         treatment = object@str_treatment_fm,
          test = test,
          p = p)
 }
 
 warn <- function(expr, object, activity) {
   withCallingHandlers(expr, warning = function(w) {
-    str <- c("During", activity, "Object of class", class(object), "with response",
-             object@response, "and treatment", object@treatment,
+    str <- c("During", activity, "object of class", class(object), "with response",
+             object@response, "and treatment formu", object@str_treatment_fm,
              "was involved in warning: \n", conditionMessage(w), "\n")
     cat(str)
     invokeRestart("muffleWarning")

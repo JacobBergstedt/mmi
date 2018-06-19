@@ -8,9 +8,7 @@ setOldClass("negbin")
 
 # mmi_model classes -------------------------------------------------------
 .make_model <- setClass("mmi_model",
-                        slots = c(var_labels = "character",
-                                  str_formula = "formula",
-                                  str_null_formula = "formula"))
+                        slots = c(var_labels = "character"))
 
 #' S4 class for representing a linear model specification and a fit to that specification.
 #'
@@ -72,22 +70,23 @@ frame.mmi_lmm <- function(object, ...) object@fit@frame
 fit_null <- function(object, ...) UseMethod("fit_null")
 
 #' @export
-fit_null.mmi_lm <- function(object, ...) lm(as.formula(object@str_null_formula), frame(object))
+fit_null.mmi_lm <- function(object, ...) lm(get_null_formula(object), frame(object))
 
 #' @export
-fit_null.mmi_logreg <- function(object, ...) glm(as.formula(object@str_null_formula), frame(object),
-                                                 family = "binomial")
+fit_null.mmi_logreg <- function(object, ...) glm(get_null_formula(object), frame(object),
+                                                                  family = "binomial")
 
 #' @export
-fit_null.mmi_nb <- function(object, ...) glm.nb(as.formula(object@str_null_formula), frame(object))
+fit_null.mmi_nb <- function(object, ...) glm.nb(get_null_formula(object), frame(object))
 
 #' @export
-fit_null.mmi_beta <- function(object, ...) betareg(as.formula(object@str_null_formula), frame(object))
+fit_null.mmi_beta <- function(object, ...) betareg(get_null_formula(object), frame(object))
 
 #' @export
 fit_null.mmi_lmm <- function(object, REML = TRUE) {
+  browser()
   study_frame = frame(object)
-  lmer(as.formula(object@str_null_formula), study_frame, REML = REML)
+  lmer(get_null_formula(object), study_frame, REML = REML)
 }
 
 # Variance component estimations ----------------------------------------------------

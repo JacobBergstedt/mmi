@@ -83,8 +83,12 @@ wald <- function(object) UseMethod("wald")
 
 #' @export
 wald.mmi_lm <- function(object) {
-  est <- coef(object@fit)[object@trt_levels]
+  est <- coef(object@fit)[object@var_labels]
   t <- est / object@se
   p <- 2 * pt(abs(t), object@fit$df.residual, lower.tail = FALSE)
-  setup_test_tib(object, p, "wald")
+  tibble(response = object@response,
+         treatment = object@str_treatment_fm,
+         variable_labels = object@var_labels,
+         test = "wald",
+         p = p)
 }

@@ -1,11 +1,10 @@
 # Documentation file for the mmi package.
-#' @import  methods
+#' @import  methods stringr
 #' @importClassesFrom lme4 lmerMod
 #' @importFrom lme4 lmerControl fixef lmer refitML confint.merMod
 #' @importFrom purrr map map_dfr
 #' @importFrom tibble tibble
 #' @importFrom dplyr left_join
-#' @importFrom stringr str_extract
 #' @importFrom stats anova lm coef as.formula confint glm logLik pchisq pt qt
 #' @importFrom pbkrtest KRmodcomp
 #' @importFrom betareg betareg
