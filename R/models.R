@@ -62,6 +62,8 @@ coef.mmi_lmm <- function(object) fixef(object@fit)[object@var_labels]
 
 # Get model dataframe methods ---------------------------------------------------------
 frame <- function(object, ...) UseMethod("frame")
+frame.spec <- function(object, fit) fit$model
+frame.spec_lmm <- function(object, fit) fit@frame
 frame.mmi_model <- function(object, ...) object@fit$model
 frame.mmi_lmm <- function(object, ...) object@fit@frame
 
@@ -84,7 +86,6 @@ fit_null.mmi_beta <- function(object, ...) betareg(get_null_formula(object), fra
 
 #' @export
 fit_null.mmi_lmm <- function(object, REML = TRUE) {
-  browser()
   study_frame = frame(object)
   lmer(get_null_formula(object), study_frame, REML = REML)
 }

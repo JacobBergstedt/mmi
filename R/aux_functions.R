@@ -15,7 +15,7 @@ get_slots <- function(fam, slot) {
 
 find_response <- function(str_response_fm) {
   str_response_fm <- str_replace_all(str_response_fm, "[[:space:]]", "")
-  if (str_detect(str_response_fm, "\\(") & str_detect(str_response_fm, "\\)")) {
+  if (should_transform(str_response_fm)) {
     str_extract(str_response_fm, "(?<=\\().*(?=\\))")
   } else str_response_fm
 
@@ -23,7 +23,7 @@ find_response <- function(str_response_fm) {
 
 find_trans <- function(str_response_fm) {
   str_response_fm <- str_replace_all(str_response_fm, "[[:space:]]", "")
-  if (str_detect(str_response_fm, "\\(") & str_detect(str_response_fm, "\\)")) {
+  if (should_transform(str_response_fm)) {
     str_extract(str_response_fm, ".*(?=\\()")
   } else "identity"
 }
@@ -53,8 +53,8 @@ is_empty <- function(x) {
   length(x) == 0
 }
 
-name_fam <- function(spec_frame) {
-  paste0(spec_frame[["response"]], "_", spec_frame[["treatment"]])
+name_fam <- function(spec_frame, model) {
+  paste0(spec_frame[["response"]], "_", spec_frame[["str_treatment_fm"]], "_", model)
 }
 
 one_if_no_preds <- function(covs) {
@@ -105,6 +105,10 @@ setup_lrt_tib <- function(object, p, test) {
          treatment = object@str_treatment_fm,
          test = test,
          p = p)
+}
+
+should_transform <- function(str_response_fm) {
+  str_detect(str_response_fm, "(log|log10)\\([a-z, A-Z, 0-9, _, .]+\\)")
 }
 
 warn <- function(expr, object, activity) {

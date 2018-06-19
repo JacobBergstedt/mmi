@@ -53,7 +53,6 @@
 setMethod("initialize", "spec", function(.Object, ...) {
   .Object <- callNextMethod()
   .Object@response <- find_response(.Object@str_response_fm)
-  .Object@trans <- find_trans(.Object@str_response_fm)
   .Object
 })
 
@@ -93,7 +92,7 @@ get_formula <- function(object) {
 }
 
 get_formula.spec <- function(object) {
-  paste0(object@str_response_fm, " ~ ", object@str_treatment_fm, " + ", object@str_controls_fm)
+  paste0(object@response, " ~ ", object@str_treatment_fm, " + ", object@str_controls_fm)
 }
 
 #' Generic method that computes the formula without the treatment for the fit.
@@ -106,11 +105,9 @@ get_null_formula <- function(object) {
 }
 
 get_null_formula.spec <- function(object) {
-  paste0(object@str_response_fm, " ~ ", object@str_controls_fm)
+  paste0(object@response, " ~ ", object@str_controls_fm)
 }
 
-frame.spec_model <- function(object, fit) fit$model
-frame.spec_lmm <- function(object, fit) fit@frame
 
 # get_trt_levels methods --------------------------------------------------------------
 #' Generic method that computes the names given to effects from variables that are
@@ -188,11 +185,29 @@ fit_model <- function(object, study_frame) {
 #' \code{\link[stats]{lm}} using the formula and the data in study_frame.
 #' @export
 fit_model.spec_lm <- function(object, study_frame){
+  if (should_transform(object@str_response_fm)) {
+    study_frame[[object@response]] <- match.fun(object@trans)(study_frame[[object@response]])
+  }
   fm <- get_formula(object)
   fit <- lm(fm, study_frame)
   var_labels <- get_var_labels(object, fit)
   se = est_sandwich_se(fit, var_labels)
   .make_lm(object, fit = fit, var_labels = var_labels, se = se)
+}
+
+#'@describeIn fit_model
+#' Constructs a \code{\linkS4class{mmi_lmm}} object by setting up a formula using \code{\link{get_formula}}
+#' and then fitting a \code{\linkS4class{lmerMod}} using the formula and the data in study_frame.
+#' @export
+fit_model.spec_lmm <- function(object, study_frame) {
+  if (should_transform(object@str_response_fm)) {
+    study_frame[[object@response]] <- match.fun(object@trans)(study_frame[[object@response]])
+  }
+  fm <- get_formula(object)
+  fit <- warn(lmer(fm, study_frame), object, "fitting of model")
+  var_labels <- get_var_labels(object, fit)
+  .make_lmm(object, fit = fit,
+            var_labels = var_labels)
 }
 
 #'@describeIn fit_model
@@ -214,17 +229,7 @@ fit_model.spec_nb <- function(object, study_frame) {
   .make_nb(object, fit = fit, var_labels = var_labels)
 }
 
-#'@describeIn fit_model
-#' Constructs a \code{\linkS4class{mmi_lmm}} object by setting up a formula using \code{\link{get_formula}}
-#' and then fitting a \code{\linkS4class{lmerMod}} using the formula and the data in study_frame.
-#' @export
-fit_model.spec_lmm <- function(object, study_frame) {
-  fm <- get_formula(object)
-  fit <- warn(lmer(fm, study_frame), object, "fitting of model")
-  var_labels <- get_var_labels(object, fit)
-  .make_lmm(object, fit = fit,
-            var_labels = var_labels)
-}
+
 
 #'@describeIn fit_model
 #' Constructs a \code{\linkS4class{mmi_logreg}} object by setting up a formula using \code{\link{get_formula}}
@@ -237,4 +242,26 @@ fit_model.spec_beta <- function(object, study_frame) {
   .make_beta(object,
              fit = fit,
              var_labels = var_labels)
+}
+
+
+# From old branch ---------------------------------------------------------------------
+
+
+#'@describeIn fit_model
+#' Constructs a \code{\linkS4class{mmi_trans_lm}} object by setting up a formula using \code{\link{get_formula}}
+#' and then fitting a \code{\link[stats]{lm}} on the transformed response using the formula and the data in study_frame.
+#' @export
+fit_model.spec_trans_lm <- function(object, study_frame) {
+  study_frame[[object@response]] <- match.fun(object@trans)(study_frame[[object@response]])
+  .make_lm(NextMethod())
+}
+
+#'@describeIn fit_model
+#' Constructs a \code{\linkS4class{mmi_trans_lmm}} object by setting up a formula using \code{\link{get_formula}}
+#' and then fitting a \code{\linkS4class{lmerMod}} on the transformed response using the formula and the data in study_frame.
+#' @export
+fit_model.spec_trans_lmm <- function(object, study_frame) {
+  study_frame[[object@response]] <- match.fun(object@trans)(study_frame[[object@response]])
+  .make_lmm(NextMethod())
 }

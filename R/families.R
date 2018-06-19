@@ -69,15 +69,17 @@ NULL
 
 #' @export
 specify_new <- function(responses, treatments = character(0), controls = character(0),
-                        model = NULL) {
-  spec_frame <- expand.grid(response = responses, treatment = treatments,
+                        model, trans = NULL) {
+  spec_frame <- expand.grid(response = responses, str_treatment_fm = treatments,
                             stringsAsFactors = FALSE)
   spec_fam <- vector(mode = "list", length = nrow(spec_frame))
   spec_fam <- .make_spec_fam(spec_fam)
   for (i in seq_len(nrow(spec_frame))) {
-    spec_obj <- .make_spec(str_response_fm = spec_frame[i, 1],
-                           str_treatment_fm = spec_frame[i, 2],
-                           str_controls_fm = controls)
+    if (is.null(trans)) trans <- find_trans(spec_frame[["response"]][i])
+    spec_obj <- .make_spec(str_response_fm = spec_frame[["response"]][i],
+                           str_treatment_fm = spec_frame[["str_treatment_fm"]][i],
+                           str_controls_fm = controls,
+                           trans = trans)
 
     spec_fam[[i]] <- switch(model,
                             lm = .make_spec_lm(spec_obj),
@@ -86,6 +88,7 @@ specify_new <- function(responses, treatments = character(0), controls = charact
                             negbin = .make_spec_nb(spec_obj),
                             beta = .make_spec_beta(spec_obj))
   }
+  names(spec_fam) <- name_fam(spec_frame, model)
   spec_fam
 }
 
@@ -157,18 +160,15 @@ setMethod("show", "fam", function(object) {
 print.spec_fam <- function(x, ...) {
   tab <- table(purrr::map_chr(x, class))
   tab_str <- paste(paste0(tab, " ", names(tab), " objects"), collapse = ", ")
-  cat(class(x), " object of length ", length(x), ". \nContains: \n", tab_str,", ", sep = "")
+  cat(class(x), " object of length ", length(x), ". \nContains: \n", tab_str)
 }
 
 # Concatenate methods ------------------------------------------------------------------
 #' @export
 c.spec_fam <- function(...) {
   objs <- list(...)
-  responses <- unique(unlist(map(objs, ~ .@responses)))
-  treatments <- unique(unlist(map(objs, ~ .@treatments)))
   .Data <- unlist(map(objs, ~ .@.Data))
-  names(.Data) <- unlist(map(objs, names))
-  .make_spec_fam(.Data = .Data, responses = responses, treatments = treatments)
+  .make_spec_fam(.Data = .Data)
 }
 
 #' @export
