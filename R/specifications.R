@@ -30,7 +30,7 @@
 #'
 #'See help for \code{\linkS4class{spec}}.
 .make_spec_lmm <- setClass("spec_lmm",
-                     contains = "spec")
+                           contains = "spec")
 
 #'S4 class spec_logreg for a logistic regression specification.
 #'
@@ -92,7 +92,9 @@ get_formula <- function(object) {
 }
 
 get_formula.spec <- function(object) {
-  paste0(object@response, " ~ ", object@str_treatment_fm, " + ", object@str_controls_fm)
+  if (!is_empty(object@str_controls_fm)) {
+    paste0(object@response, " ~ ", object@str_treatment_fm, " + ", object@str_controls_fm)
+  } else paste0(object@response, " ~ ", object@str_treatment_fm)
 }
 
 #' Generic method that computes the formula without the treatment for the fit.
@@ -109,7 +111,7 @@ get_null_formula.spec <- function(object) {
 }
 
 
-# get_trt_levels methods --------------------------------------------------------------
+# get_var_levels methods --------------------------------------------------------------
 #' Generic method that computes the names given to effects from variables that are
 #' factors/characters/logicals.
 #'
@@ -118,52 +120,40 @@ get_null_formula.spec <- function(object) {
 #' @param object A \code{\linkS4class{spec}} object.
 #' @param fit The model fit that will be added to the \code{\linkS4class{spec}} in the subsequent
 #' mmi model construction.
-get_var_labels <- function(object, fit) {
-  UseMethod("get_var_labels")
+get_var_levels <- function(object, fit) {
+  UseMethod("get_var_levels")
 }
 
-get_var_labels.spec <- function(object, fit) {
-  terms <- str_replace_all(object@str_treatment_fm, "[[:space:]]", "")
-  terms <- strsplit(terms, "+", fixed = TRUE)[[1]]
-  out_terms <- vector(mode = "list", length = length(terms))
-  mf <- frame(object, fit)
+get_var_levels.spec <- function(object, model_frame) {
+  terms <- find_terms(object@str_treatment_fm)
+  terms_list <- vector(mode = "list", length = length(terms))
+  names(terms_list) <- terms
+
   for (i in seq_len(length(terms))) {
     if (str_detect(terms[i], "\\*")) {
-      int_vars <- interacting_vars(terms[i], mf)
-      out_terms[[i]] <- c(int_vars$left, int_vars$right,
-                          paste0(int_vars$left, ":", int_vars$right))
+      int_vars <- interacting_levels(terms[i], model_frame)
+      terms_list[[i]] <- c(int_vars$left, int_vars$right,
+                          paste(rep(int_vars$left, each = length(int_vars$right)),
+                                int_vars$right,
+                                sep = ":"))
     }
 
     else if (str_detect(terms[i], "\\:")) {
-      int_vars <- interacting_vars(terms[i], mf)
-      out_terms[[i]] <- paste0(int_vars$left, ":", int_vars$right)
+      int_vars <- interacting_levels(terms[i], model_frame)
+      terms_list[[i]] <- paste(rep(int_vars$left, each = length(int_vars$right)),
+                               int_vars$right,
+                               sep = ":")
     }
 
     else if (str_detect(terms[i], "I\\(.*\\)")) {
-      out_terms[[i]] <- str_match(terms[i], "I\\(.*\\)")
+      terms_list[[i]] <- str_extract(terms[i], "I\\(.*\\)")
     }
 
-    else out_terms[[i]] <- paste0(terms[[i]], levels(mf[[terms[i]]])[-1])
+    else terms_list[[i]] <- paste0(terms[i], levels(model_frame[[terms[i]]])[-1])
   }
-  unlist(out_terms)
-}
 
-# get_var_labels.spec_lmm <- function(object, fit) {
-#   browser()
-#   if (!is_empty(object@treatment)) {
-#     mf <- fit@frame
-#     trt <- mf[[object@treatment]]
-#     if (!class(trt) %in% c("character", "logical", "factor")) {
-#       object@treatment
-#     } else if (is.factor(trt)) {
-#       paste0(object@treatment, levels(trt)[-1])
-#     } else {
-#       paste0(object@treatment, levels(factor(trt))[-1])
-#     }
-#   } else {
-#     character(0)
-#   }
-# }
+  do.call("rbind", map2(names(terms_list), terms_list, ~ cbind(variable = .x, levels = .y)))
+}
 
 # Constructors for the mmi_model objects ----------------------------------
 #' S3 Generic function fit_model to construct mmi_model objects.
@@ -190,8 +180,8 @@ fit_model.spec_lm <- function(object, study_frame){
   }
   fm <- get_formula(object)
   fit <- lm(fm, study_frame)
-  var_labels <- get_var_labels(object, fit)
-  se = est_sandwich_se(fit, var_labels)
+  var_labels <- get_var_levels(object, fit$model)
+  se = est_sandwich_se(fit, var_labels[, "levels"])
   .make_lm(object, fit = fit, var_labels = var_labels, se = se)
 }
 
@@ -205,7 +195,7 @@ fit_model.spec_lmm <- function(object, study_frame) {
   }
   fm <- get_formula(object)
   fit <- warn(lmer(fm, study_frame), object, "fitting of model")
-  var_labels <- get_var_labels(object, fit)
+  var_labels <- get_var_levels(object, fit@frame)
   .make_lmm(object, fit = fit,
             var_labels = var_labels)
 }
@@ -217,7 +207,7 @@ fit_model.spec_lmm <- function(object, study_frame) {
 fit_model.spec_logreg <- function(object, study_frame) {
   fm <- get_formula(object)
   fit <- warn(glm(fm, study_frame, family = "binomial"), object, activity = "fitting of model")
-  var_labels <- get_var_labels(object, fit)
+  var_labels <- get_var_levels(object, fit$model)
   .make_logreg(object, fit = fit, var_labels = var_labels)
 }
 
@@ -225,11 +215,9 @@ fit_model.spec_logreg <- function(object, study_frame) {
 fit_model.spec_nb <- function(object, study_frame) {
   fm <- get_formula(object)
   fit <- warn(glm.nb(fm, study_frame), object, activity = "fitting of model")
-  var_labels <- get_var_labels(object, fit)
+  var_labels <- get_var_levels(object, fit$model)
   .make_nb(object, fit = fit, var_labels = var_labels)
 }
-
-
 
 #'@describeIn fit_model
 #' Constructs a \code{\linkS4class{mmi_logreg}} object by setting up a formula using \code{\link{get_formula}}
@@ -238,30 +226,26 @@ fit_model.spec_nb <- function(object, study_frame) {
 fit_model.spec_beta <- function(object, study_frame) {
   fm <- get_formula(object)
   fit <- warn(betareg(fm, study_frame), object, activity = "fitting of model")
-  var_labels <- get_var_labels(object, fit)
+  var_labels <- get_var_levels(object, fit$model)
   .make_beta(object,
              fit = fit,
              var_labels = var_labels)
 }
 
 
-# From old branch ---------------------------------------------------------------------
+# a <- 1:2; b <- stri_rand_strings(1e1, 2);
+# microbenchmark::microbenchmark(paste(rep(a, each = length(b)), b, sep = ":"),
+#                                as.vector(outer(a, b, paste, sep=":")),
+#                                times = 1e3)
 
 
-#'@describeIn fit_model
-#' Constructs a \code{\linkS4class{mmi_trans_lm}} object by setting up a formula using \code{\link{get_formula}}
-#' and then fitting a \code{\link[stats]{lm}} on the transformed response using the formula and the data in study_frame.
-#' @export
-fit_model.spec_trans_lm <- function(object, study_frame) {
-  study_frame[[object@response]] <- match.fun(object@trans)(study_frame[[object@response]])
-  .make_lm(NextMethod())
-}
 
-#'@describeIn fit_model
-#' Constructs a \code{\linkS4class{mmi_trans_lmm}} object by setting up a formula using \code{\link{get_formula}}
-#' and then fitting a \code{\linkS4class{lmerMod}} on the transformed response using the formula and the data in study_frame.
-#' @export
-fit_model.spec_trans_lmm <- function(object, study_frame) {
-  study_frame[[object@response]] <- match.fun(object@trans)(study_frame[[object@response]])
-  .make_lmm(NextMethod())
-}
+
+
+
+
+cbind(names(p)[1], p[[1]])
+
+
+
+

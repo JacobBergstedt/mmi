@@ -88,7 +88,10 @@ specify_new <- function(responses, treatments = character(0), controls = charact
                             negbin = .make_spec_nb(spec_obj),
                             beta = .make_spec_beta(spec_obj))
   }
-  names(spec_fam) <- name_fam(spec_frame, model)
+
+  names(spec_fam) <- name_fam(find_response(spec_frame$response),
+                              spec_frame$str_treatment_fm,
+                              model)
   spec_fam
 }
 
@@ -160,7 +163,7 @@ setMethod("show", "fam", function(object) {
 print.spec_fam <- function(x, ...) {
   tab <- table(purrr::map_chr(x, class))
   tab_str <- paste(paste0(tab, " ", names(tab), " objects"), collapse = ", ")
-  cat(class(x), " object of length ", length(x), ". \nContains: \n", tab_str)
+  cat(class(x), " object of length ", length(x), "\nContains: \n", tab_str)
 }
 
 # Concatenate methods ------------------------------------------------------------------
@@ -168,6 +171,7 @@ print.spec_fam <- function(x, ...) {
 c.spec_fam <- function(...) {
   objs <- list(...)
   .Data <- unlist(map(objs, ~ .@.Data))
+  names(.Data) <- unlist(map(objs, names))
   .make_spec_fam(.Data = .Data)
 }
 
@@ -188,9 +192,7 @@ c.fam <- function(...) {
     new_sfam <- x@.Data[idx]
     names <- names(x)[idx]
   }
-  responses <- purrr::map_chr(new_sfam, ~ .@response)
-  treatments <- purrr::map_chr(new_sfam, ~ .@treatment)
-  .make_spec_fam(new_sfam, names = names, responses = responses, treatments = treatments)
+  .make_spec_fam(new_sfam, names = names)
 }
 
 #' @export
@@ -365,9 +367,9 @@ select_confidence <- function(fam, test_tib, crit = "FDR", thresh = 0.05, level 
   if (!crit %in% names(test_tib)) stop("crit not a name in test_tib")
   if (is.null(names(fam))) stop("This function currently only works for named families")
   ntot <- nrow(test_tib)
-  test_tib <- test_tib[test_tib[[crit]] < thresh, c("response", "treatment")]
+  test_tib <- test_tib[test_tib[[crit]] < thresh, c("response", "treatment", "model")]
   nhits <- nrow(test_tib)
-  selected_models <- name_fam(test_tib)
+  selected_models <- name_fam(test_tib$response, test_tib$treatment, model = test_tib$model)
   fcr_alpha <- (1 - level) * nhits / ntot
   tib <- confidence(fam[names(fam) %in% selected_models], level = 1 - fcr_alpha)
   names(tib)[names(tib) == "lower"] <- "FCR_lower"

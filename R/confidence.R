@@ -22,14 +22,15 @@ confidence <- function(object, level, ...) {
 confidence.mmi_model <- function(object, level) {
   inv_trans <- inv(object@trans)
   est <- coef(object)
-  confs <- warn(confint(object@fit, parm = object@var_labels, level = level, quiet = TRUE),
+  confs <- warn(confint(object@fit, parm = object@var_labels[, "levels"], level = level,
+                        quiet = TRUE),
                 object,
                 "estimation of confidence intervals")
   confs <- inv_trans(confs)
   confs <- simplify_col_sel(confs)
   tibble(response = object@response,
-         treatment = object@str_treatment_fm,
-         variable_labels = object@var_labels,
+         variables = object@var_labels[, "variable"],
+         levels = object@var_labels[, "levels"],
          est = inv_trans(est),
          lower = confs$lower,
          higher = confs$higher,
@@ -46,8 +47,8 @@ confidence.mmi_lm <- function(object, level) {
   alpha <- (1 - level) / 2
   p_thresh <- qt(1 - alpha, object@fit$df.residual)
   tibble(response = object@response,
-         treatment = object@str_treatment_fm,
-         variable_labels = object@var_labels,
+         variables = object@var_labels[, "variable"],
+         levels = object@var_labels[, "levels"],
          est = inv_trans(mu),
          lower = inv_trans(mu - p_thresh * object@se),
          higher = inv_trans(mu + p_thresh * object@se),

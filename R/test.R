@@ -51,14 +51,18 @@ lrt <- function(object) UseMethod("lrt")
 #' slot fit and sets up a tidy tibble for the result.
 #' @export
 lrt.mmi_model <- function(object) {
-  null <- fit_null(object)
-  setup_lrt_tib(object, p_lrt(logLik(null), logLik(object@fit)), "lrt")
+  nulls <- fit_all_nulls(object, REML = FALSE)
+  alt_log_lik <- logLik(object@fit)
+  p <- map_dbl(nulls, ~ p_lrt(logLik(.), alt_log_lik))
+  setup_lrt_tib(object, p, "lrt")
 }
 
 #' @export
 lrt.mmi_lmm <- function(object) {
-  null <- fit_null(object, REML = FALSE)
-  setup_lrt_tib(object, p_lrt(logLik(null), logLik(refitML(object@fit))), "lrt")
+  nulls <- fit_all_nulls(object, REML = FALSE)
+  alt_log_lik <- logLik(refitML(object@fit))
+  p <- map_dbl(nulls, ~ p_lrt(logLik(.), alt_log_lik))
+  setup_lrt_tib(object, p, "lrt")
 }
 
 # ft --------------------------------------------------------------------------------
@@ -67,14 +71,15 @@ ft <- function(object) UseMethod("ft")
 
 #' @export
 ft.mmi_lm <- function(object) {
-  p <- anova(object@fit, fit_null(object))[-1, "Pr(>F)"]
+  nulls <- fit_all_nulls(object)
+  p <- map_dbl(nulls, ~ anova(object@fit, .)[-1, "Pr(>F)"])
   setup_lrt_tib(object, p, "ft")
 }
 
 #' @export
 ft.mmi_lmm <- function(object) {
-  null <- warn(fit_null(object), object, "fitting of null model")
-  p <- KRmodcomp(object@fit, null)$stats$p.value
+  nulls <- warn(fit_all_nulls(object), object, "fitting of null model")
+  p <- map_dbl(nulls, ~ KRmodcomp(object@fit, .)$stats$p.value)
   setup_lrt_tib(object, p, "ft")
 }
 
@@ -83,12 +88,13 @@ wald <- function(object) UseMethod("wald")
 
 #' @export
 wald.mmi_lm <- function(object) {
-  est <- coef(object@fit)[object@var_labels]
+  est <- coef(object@fit)[object@var_labels[, "levels"]]
   t <- est / object@se
   p <- 2 * pt(abs(t), object@fit$df.residual, lower.tail = FALSE)
   tibble(response = object@response,
-         treatment = object@str_treatment_fm,
-         variable_labels = object@var_labels,
+         variables = object@var_labels[, "variable"],
+         levels = object@var_labels[, "levels"],
          test = "wald",
-         p = p)
+         p = p,
+         model = str_extract(class(object), "(?<=mmi_).*"))
 }

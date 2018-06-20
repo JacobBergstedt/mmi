@@ -8,7 +8,7 @@ setOldClass("negbin")
 
 # mmi_model classes -------------------------------------------------------
 .make_model <- setClass("mmi_model",
-                        slots = c(var_labels = "character"))
+                        slots = c(var_labels = "matrix"))
 
 #' S4 class for representing a linear model specification and a fit to that specification.
 #'
@@ -54,10 +54,12 @@ setOldClass("negbin")
 
 # Coef methods ----------------------------------------------------------------------
 #' @export
-coef.mmi_model <- function(object) coef(object@fit)[object@var_labels]
+coef.mmi_model <- function(object){
+  coef(object@fit)[object@var_labels[,"levels"]]
+}
 
 #' @export
-coef.mmi_lmm <- function(object) fixef(object@fit)[object@var_labels]
+coef.mmi_lmm <- function(object) fixef(object@fit)[object@var_labels[,"levels"]]
 
 
 # Get model dataframe methods ---------------------------------------------------------
@@ -69,26 +71,24 @@ frame.mmi_lmm <- function(object, ...) object@fit@frame
 
 # fit_null methods ------------------------------------------------------------------
 #' @export
-fit_null <- function(object, ...) UseMethod("fit_null")
+fit_null <- function(object, null_fm, ...) UseMethod("fit_null")
 
 #' @export
-fit_null.mmi_lm <- function(object, ...) lm(get_null_formula(object), frame(object))
+fit_null.mmi_lm <- function(object, null_fm, ...) lm(null_fm, frame(object))
 
 #' @export
-fit_null.mmi_logreg <- function(object, ...) glm(get_null_formula(object), frame(object),
+fit_null.mmi_logreg <- function(object, null_fm, ...) glm(null_fm, frame(object),
                                                                   family = "binomial")
 
 #' @export
-fit_null.mmi_nb <- function(object, ...) glm.nb(get_null_formula(object), frame(object))
+fit_null.mmi_nb <- function(object, null_fm, ...) glm.nb(null_fm, frame(object))
 
 #' @export
-fit_null.mmi_beta <- function(object, ...) betareg(get_null_formula(object), frame(object))
+fit_null.mmi_beta <- function(object, null_fm, ...) betareg(null_fm, frame(object))
 
 #' @export
-fit_null.mmi_lmm <- function(object, REML = TRUE) {
-  study_frame = frame(object)
-  lmer(get_null_formula(object), study_frame, REML = REML)
-}
+fit_null.mmi_lmm <- function(object, null_fm, REML = TRUE) lmer(null_fm,
+                                                                frame(object), REML = REML)
 
 # Variance component estimations ----------------------------------------------------
 #' @export
@@ -96,11 +96,13 @@ prop_var <- function(object) UseMethod("prop_var")
 
 #' @export
 prop_var.mmi_lmm <- function(object) {
+  browser()
+  rands <- find_rands(object@str_treatment_fm)
   est <- as.data.frame(lme4::VarCorr(object@fit))[c("grp", "vcov")]
   res_var <- est$vcov[est$grp == "Residual"]
-  est <- left_join(tibble(grp = object@rands), est, by = "grp")
+  est <- left_join(tibble(grp = rands), est, by = "grp")
   tibble(response = object@response,
-         random_effects = object@rands,
+         random_effects = rands,
          prop_var = 100 * est$vcov / c(est$vcov + res_var))
 }
 
