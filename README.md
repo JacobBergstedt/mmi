@@ -3,7 +3,7 @@
 mmi
 ===
 
-mmi is an R package to conveniently fit and compare many models. It was developed in parallel to the work on the article "Natural variation in immune cell parameters is preferentially driven by genetic factors". The flow cytometry data, as well as the clinical/demographical data analyzed in that article are published within this package. A tutorial on how the package was used to analyze the impact of the clinical/demographical data on immunophenotypes can be found [here](https://jacobbergstedt.github.io/mmi/). Note that the R documentation as of now is not updated and is not correct. It will be updated soon.
+mmi is an R package to conveniently fit and compare many models. It was developed in parallel to the work on the article "Natural variation in immune cell parameters is preferentially driven by genetic factors". The flow cytometry data, as well as the clinical/demographical data analyzed in that article are published within this package.
 
 Installation
 ------------
@@ -26,16 +26,16 @@ facs
 #> # A tibble: 816 x 167
 #>    SUBJID MFI_CD16_in_CD16hi_of… MFI_CD16_of_CD56hi_of… MFI_CD69_in_CD16h…
 #>     <int>                  <int>                  <dbl>              <int>
-#>  1      2                  31186                  1910.                605
-#>  2      3                  32877                  4283.                794
-#>  3      4                  30851                  4633.                688
-#>  4      5                  27428                  3261.                620
-#>  5      8                  24202                  3247.                627
-#>  6      9                  35577                  2037.                594
-#>  7     11                  27207                  2874.                388
-#>  8     13                  12138                  1348.                419
-#>  9     16                  18179                  2338.                353
-#> 10     19                  15629                  1639.                381
+#>  1      2                  31186                   1910                605
+#>  2      3                  32877                   4283                794
+#>  3      4                  30851                   4633                688
+#>  4      5                  27428                   3261                620
+#>  5      8                  24202                   3247                627
+#>  6      9                  35577                   2037                594
+#>  7     11                  27207                   2874                388
+#>  8     13                  12138                   1348                419
+#>  9     16                  18179                   2338                353
+#> 10     19                  15629                   1639                381
 #> # ... with 806 more rows, and 163 more variables:
 #> #   MFI_CD69_in_CD56hi.panel4 <int>, MFI_CD8a_in_CD16hi.panel4 <dbl>,
 #> #   MFI_CD8a_in_CD56hi.panel4 <int>, MFI_HLADR_in_CD16hi.panel4 <dbl>,
@@ -103,30 +103,30 @@ facs
 #> #   N_HLADRpos_in_CD8bpos_EM.panel1 <int>, ratio_CD4_CD8.panel1 <dbl>,
 #> #   N_CD4pos_EMRA.panel1 <int>, N_HLADRpos_in_CD4pos_EMRA.panel1 <int>, …
 ecrf
-#> # A tibble: 816 x 44
-#>    SUBJID HourOfSampling DayOfSampling   Age OwnsHouse PhysicalActivity
-#>     <int>          <dbl> <fct>         <dbl> <fct>                <dbl>
-#>  1      2           8.88 40             22.3 Yes                  3.00 
-#>  2      3           9.35 40             28.8 Yes                  0.   
-#>  3      4           8.67 40             23.7 Yes                  0.   
-#>  4      5           9.88 40             21.2 No                   0.500
-#>  5      8           8.55 81             26.2 Yes                  1.50 
-#>  6      9           8.80 81             23.8 Yes                  0.   
-#>  7     11           9.05 82             26.4 No                   4.00 
-#>  8     13           9.55 82             21.7 Yes                  0.   
-#>  9     16           9.08 109            26.5 No                   0.   
-#> 10     19           9.23 110            23.2 Yes                  1.50 
-#> # ... with 806 more rows, and 38 more variables: Sex <fct>,
-#> #   LivesWithPartner <fct>, LivesWithKids <fct>, BornInCity <fct>,
-#> #   AncestryPC1 <dbl>, AncestryPC2 <dbl>, BMI <dbl>, CMVInfection <fct>,
-#> #   FluIgG <dbl>, MetabolicScore <dbl>, LowAppetite <dbl>,
-#> #   TroubleConcentrating <dbl>, TroubleSleeping <dbl>, HoursOfSleep <dbl>,
-#> #   Listless <dbl>, UsesCannabis <fct>, RecentPersonalCrisis <fct>,
-#> #   Smoking <fct>, Employed <fct>, Education <fct>, DustExposure <fct>,
-#> #   Income <fct>, HadMeasles <fct>, HadRubella <fct>, HadChickenPox <fct>,
+#> # A tibble: 816 x 43
+#>      Age OwnsHouse PhysicalActivity Sex    LivesWithPartner LivesWithKids
+#>    <dbl> <fct>                <dbl> <fct>  <fct>            <fct>        
+#>  1  22.3 Yes                    3   Female No               No           
+#>  2  28.8 Yes                    0   Female Yes              No           
+#>  3  23.7 Yes                    0   Female Yes              No           
+#>  4  21.2 No                     0.5 Female No               No           
+#>  5  26.2 Yes                    1.5 Female No               No           
+#>  6  23.8 Yes                    0   Female Yes              No           
+#>  7  26.4 No                     4   Female Yes              No           
+#>  8  21.7 Yes                    0   Female No               No           
+#>  9  26.5 No                     0   Female Yes              No           
+#> 10  23.2 Yes                    1.5 Female No               No           
+#> # ... with 806 more rows, and 37 more variables: BornInCity <fct>,
+#> #   Inbreeding <dbl>, BMI <dbl>, CMVPositiveSerology <fct>, FluIgG <dbl>,
+#> #   MetabolicScore <dbl>, LowAppetite <dbl>, TroubleConcentrating <dbl>,
+#> #   TroubleSleeping <dbl>, HoursOfSleep <dbl>, Listless <dbl>,
+#> #   UsesCannabis <fct>, RecentPersonalCrisis <fct>, Smoking <fct>,
+#> #   Employed <fct>, Education <fct>, DustExposure <fct>, Income <fct>,
+#> #   HadMeasles <fct>, HadRubella <fct>, HadChickenPox <fct>,
 #> #   HadMumps <fct>, HadTonsillectomy <fct>, HadAppendicectomy <fct>,
 #> #   VaccineHepA <fct>, VaccineMMR <fct>, VaccineTyphoid <fct>,
 #> #   VaccineWhoopingCough <fct>, VaccineYellowFever <fct>,
-#> #   VaccineHepB <fct>, VaccineFlu <fct>, DepressionScore <dbl>,
-#> #   HeartRate <dbl>, Temperature <dbl>
+#> #   VaccineHepB <fct>, VaccineFlu <fct>, SUBJID <int>,
+#> #   DepressionScore <dbl>, HeartRate <dbl>, Temperature <dbl>,
+#> #   HourOfSampling <dbl>, DayOfSampling <fct>
 ```
