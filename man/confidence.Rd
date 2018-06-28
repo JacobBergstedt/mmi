@@ -2,11 +2,14 @@
 % Please edit documentation in R/confidence.R, R/families.R
 \name{confidence}
 \alias{confidence}
+\alias{confidence.mmi_model}
 \alias{confidence.mmi_lm}
 \alias{confidence.fam}
 \title{Generic method to compute confidence regions for mmi model and family objects.}
 \usage{
 confidence(object, level, ...)
+
+\method{confidence}{mmi_model}(object, level)
 
 \method{confidence}{mmi_lm}(object, level)
 
@@ -18,20 +21,23 @@ confidence(object, level, ...)
 \item{level}{The confidence level.}
 }
 \description{
-For \code{\linkS4class{mmi_lm}} objects a confidence interval is constructed using the
-t-distribution assumption for the linear parameter over the standard error. The standard
+For \code{\linkS4class{mmi_lm}} objects a confidence interval for treatment terms
+is constructed using the t-distribution assumption
+for the linear parameter over the standard error. The standard
 error is estimated using sandwich estimation. For the other models the confidence intervals
-are computed using the profile likelihood. A tidy tibble will be setup with the information.
+are computed using the profile likelihood. A tibble will be setup with the information.
 For a \code{\linkS4class{fam}} object confidence intervals will be computed for each model
 element using the individual methods, and the tibbles will then be binded together in a
 map-reduce pattern.
 }
 \section{Methods (by class)}{
 \itemize{
+\item \code{mmi_model}: Confidence method for the superclass \code{\linkS4class{mmi_model}}. Uses confint.
+
 \item \code{mmi_lm}: Computes the confidence interval using the t-distribution assumption and sets up a
 tidy tibble with the information. Uses the sandwich estimated standard errors.
 
-\item \code{fam}: Maps over the family, constructs a confidence interval for each model object using the
+\item \code{fam}: Maps over the family, constructs a confidence tibble for each model object using the
 corresponding S3 method, and the binds the information together in a tidy way.
 }}
 

@@ -9,9 +9,34 @@ est_sandwich_se <- function(fit, var_labels) {
   sqrt(v)
 }
 
-# get_slots <- function(fam, slot) {
-#   unique(unlist(map(fam, slot)))
-# }
+get_formula <- function(object) {
+  if (!is_empty(object@str_control_fm)) {
+    paste0(object@response, " ~ ", object@str_treatment_fm, " + ", object@str_control_fm)
+  } else paste0(object@response, " ~ ", object@str_treatment_fm)
+}
+
+get_var_levels <- function(object, model_frame) {
+  terms <- labels(terms(as.formula(paste("~", object@str_treatment_fm))))
+  terms_list <- vector(mode = "list", length = length(terms))
+  names(terms_list) <- terms
+
+  for (i in seq_len(length(terms))) {
+    if (str_detect(terms[i], "\\:")) {
+      int_vars <- interacting_levels(terms[i], model_frame)
+      terms_list[[i]] <- paste(rep(int_vars$left, each = length(int_vars$right)),
+                               int_vars$right,
+                               sep = ":")
+    }
+
+    else if (str_detect(terms[i], "I\\(.*\\)")) {
+      terms_list[[i]] <- str_extract(terms[i], "I\\(.*\\)")
+    }
+
+    else terms_list[[i]] <- paste0(terms[i], levels(model_frame[[terms[i]]])[-1])
+  }
+
+  do.call("rbind", map2(names(terms_list), terms_list, ~ cbind(variable = .x, levels = .y)))
+}
 
 find_response <- function(str) {
   str <- remove_spaces(str)
@@ -43,24 +68,6 @@ find_rands <- function(str) {
   out_terms[!is.na(out_terms)]
 }
 
-fit_all_nulls <- function(object, REML = TRUE) {
-  vars <- unique(object@var_labels[, "variable"])
-  null_list <- vector("list", length(vars))
-  for (i in seq_len(length(vars))) {
-    null_fm <- paste(vars[vars != vars[i]], collapse = " + ")
-    if (!is_empty(object@str_controls_fm)) {
-      null_fm <- paste(object@response, " ~ ", null_fm, " + ", object@str_controls_fm)}
-    else null_fm <- paste(object@response, " ~ ", null_fm)
-    null_list[[i]] <- fit_null(object, null_fm, REML = REML)
-  }
-  null_list
-}
-
-all_has_treatments <- function(fam) {
-  if (is.null(unlist(map(fam, "str_treatment_fm")))) {
-    stop("All model objects must have treatments for this function")
-  }
-}
 
 interacting_levels <- function(str, model_fram) {
   left <- str_extract(str, ".*(?=\\*|:)")
@@ -81,15 +88,11 @@ is_empty <- function(x) {
   length(x) == 0
 }
 
-name_fam <- function(response, treatment, model) {
-  str <- paste0(response, "_", treatment, "_", model)
-  remove_spaces(str)
+
+make_ids <- function(n) {
+  paste0(format(Sys.time(), "%y.%m.%d.%H.%M.%OS6"), "_", seq_len(n))
 }
 
-# one_if_no_preds <- function(covs) {
-#   if (length(covs) > 0) paste0(covs, collapse = "+")
-#   else 1
-# }
 
 p_lrt <- function(ll_null, ll_alt) {
   lr_stat <- 2 * (ll_alt - ll_null)
@@ -123,20 +126,13 @@ setup_resid_tib <- function(object, res) {
   tib
 }
 
-setup_AIC_tib <- function(object, val) {
-  tibble(AIC = val,
-         model = class(object),
-         response = object@response,
-         predictors = list(c(object@treatment, object@controls)),
-         trans = object@trans)
-}
-
 setup_lrt_tib <- function(object, p, test) {
   tibble(response = object@response,
          variable = unique(object@var_labels[, "variable"]),
          test = test,
          p = p,
-         model = str_extract(class(object), "(?<=mmi_).*"))
+         model = str_extract(class(object), "(?<=mmi_).*"),
+         model_id = object@id)
 }
 
 should_transform <- function(str_response_fm) {
@@ -151,30 +147,4 @@ warn <- function(expr, object, activity) {
     cat(str)
     invokeRestart("muffleWarning")
   })
-}
-
-
-proto <- function(object, model_frame) {
-  terms <- remove_spaces(object@str_treatment_fm)
-  terms <- strsplit(terms, "+", fixed = TRUE)[[1]]
-  out_terms <- vector(mode = "list", length = length(terms))
-  for (i in seq_len(length(terms))) {
-    if (str_detect(terms[i], "\\*")) {
-      int_vars <- interacting_vars(terms[i])
-      out_terms[[i]] <- c(int_vars$left, int_vars$right,
-                          paste0(int_vars$left, ":", int_vars$right))
-    }
-
-    else if (str_detect(terms[i], "\\:")) {
-      int_vars <- interacting_vars(terms[i])
-      out_terms[[i]] <- paste0(int_vars$left, ":", int_vars$right)
-    }
-
-    else if (str_detect(terms[i], "I\\(.*\\)")) {
-      out_terms[[i]] <- str_match(terms[i], "I\\(.*\\)")
-    }
-
-    else out_terms[[i]] <- paste0(terms[i])
-  }
-  unlist(out_terms)
 }

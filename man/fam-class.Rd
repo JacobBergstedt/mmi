@@ -9,7 +9,8 @@
 List of family objects.
 }
 \details{
-Class that represents a list of model objects as a vehicle for looping and
-then bind together information from the model objects, basically a map-reduce
+Class that represents a complete analysis. It's a list of model objects
+create to be a vehicle for looping and
+then binding together information from the model objects in a map-reduce like
 pattern. The object also defines a family in the multiple testing sense.
 }

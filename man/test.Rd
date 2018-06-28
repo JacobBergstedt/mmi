@@ -2,12 +2,15 @@
 % Please edit documentation in R/test.R, R/families.R
 \name{test}
 \alias{test}
+\alias{test.mmi_model}
 \alias{test.mmi_lm}
 \alias{test.mmi_lmm}
 \alias{test.fam}
 \title{S3 generic method to do hypothesis tests in the mmi model and family objects.}
 \usage{
 test(object, ...)
+
+\method{test}{mmi_model}(object)
 
 \method{test}{mmi_lm}(object)
 
@@ -21,20 +24,25 @@ test(object, ...)
 \description{
 Generic method to do tests for the mmi model and family objects. For the models the appropriate
 tests will be done depending on model type. Currently, a t-test using sandwich estimated standard errors
-is done for \code{\linkS4class{mmi_lm}} and an \code{\link{lrt}} is done for all other model objects.
-The information will be stored in a tidy tibble.
+is done for \code{\linkS4class{mmi_lm}} and \code{\link[pbkrtest]{KRmodcomp}} Kenward-Rogers F-test is done for
+\code{\linkS4class{mmi_lmm}} objects. An \code{\link{lrt}} is done for all other model objects.
+The information is stored in a tibble.
 For a \code{\linkS4class{fam}} object, a test will be performed for each element in the family
-and the information will be binded together in a tidy way using a map-reduce pattern.
+and the information will be binded together in a using a map-reduce pattern.
 The FDR-adjusted significance level is also calculated and added to the tibble.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{mmi_lm}: Performs a t-test with the sandwiched-estimated standard errors and sets up a tidy tibble
+\item \code{mmi_model}: Method for superclass \code{linkS4class{mmi_model}}
+
+\item \code{mmi_lm}: Performs a t-test with the sandwiched-estimated standard errors and sets up a tibble
 with the information.
 
-\item \code{mmi_lmm}: Performs an lrt and setups a tidy tibble with the information.
+\item \code{mmi_lmm}: Performs an F test and setups a tibble with the information.
 
 \item \code{fam}: Maps over the family, performs a test for each model using the corresponding S3 method,
 constructs a tibble with the p-value of the test included, and then binds the tibbles together.
+Also computes the FDR-adjusted significance
+level.
 }}
 

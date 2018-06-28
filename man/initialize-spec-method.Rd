@@ -5,16 +5,8 @@
 \alias{initialize,spec-method}
 \title{S4 initialize method for \code{\linkS4class{spec}}.}
 \usage{
-\S4method{initialize}{spec}(.Object, ..., trans, treatment, response, controls)
-}
-\arguments{
-\item{.Object}{The \code{\linkS4class{spec}} object to be created.}
-
-\item{...}{Arguments from the constructor.}
-
-\item{trans}{The specific argument \code{trans} from the constructor.}
+\S4method{initialize}{spec}(.Object, ...)
 }
 \description{
-Makes sure that the control variables
-are not responses or treatments, and makes sure that the transformation is implemented.
+S4 initialize method for \code{\linkS4class{spec}}.
 }

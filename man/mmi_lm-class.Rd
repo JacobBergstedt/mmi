@@ -6,8 +6,8 @@
 \alias{.make_lm}
 \title{S4 class for representing a linear model specification and a fit to that specification.}
 \description{
-Inherits from \code{\linkS4class{spec_lm}}. An \code{\link[stats]{lm}} fit and some
-technicalities needed from the fit are added.
+Inherits from \code{\linkS4class{spec_lm}} and \code{\linkS4class{mmi_model}}.
+An \code{\link[stats]{lm}} fit and sandwich estimated standard errors are added.
 }
 \section{Slots}{
 
@@ -16,7 +16,5 @@ technicalities needed from the fit are added.
 
 \item{\code{se}}{The standard error of the treatment (levels) estimated using
 \code{\link[sandwich]{vcovHC}}}
-
-\item{\code{trt_levels}}{The names of the treatment variables given by \code{\link[stats]{lm}}}
 }}
 

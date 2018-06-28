@@ -2,28 +2,28 @@
 % Please edit documentation in R/families.R
 \name{specify}
 \alias{specify}
-\title{Constructs a list of model specifications from variable names.}
+\title{Constructs a list of model specifications from formula strings.}
 \usage{
-specify(responses, treatments = character(0), controls = character(0),
-  model = NULL, trans = NULL, rands = NULL)
+specify(responses, treatments = NULL, controls = NULL, model,
+  trans = NULL)
 }
 \arguments{
-\item{responses}{Character vector of response variables.}
+\item{responses}{Character vector of response formula strings.}
 
-\item{treatments}{Character vector of treatment variables.}
+\item{treatments}{Character vector of treatment formula strings.}
 
-\item{controls}{Character vector of control variables that will be shared for
-all models.}
+\item{controls}{Control formula string that will be shared for all models.}
 
-\item{model}{Which model should be fitted?}
+\item{model}{Distributional assumption.}
 
-\item{trans}{Are the response variables transformed?}
-
-\item{rands}{Possible random effects shared by the response variables.}
+\item{trans}{The pretransformation of response variables.}
 }
 \description{
-Every combination of response and treatment will be a \code{spec} object in
-the list. They will all share the properties in \code{controls}, \code{model},
-\code{trans} and (if the model is a mixed model) in \code{rands}. So all
-models will have the same control variables for instance.
+Main function to create analysis representations. \code{responses}, \code{treatments}
+and \code{controls} should be vectors of formula strings.
+Every combination of \code{response} and \code{treatment} formulas
+will be a \code{spec} object in the list.
+They will all share the properties in \code{controls} and \code{model}.
+\code{trans} should be given if its known that a response variable in the database is
+transformed and a backtransformation is wanted.
 }

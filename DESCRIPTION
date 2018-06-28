@@ -1,7 +1,7 @@
 Package: mmi
 Type: Package
 Title: Multiple Model Inference
-Version: 0.1.0
+Version: 0.2.0
 Author: Jacob Bergstedt
 Maintainer: Jacob Bergstedt <jacob.bergstedt@control.lth.se>
 Description: Sets up a map-reduce pattern for looping over a list of models
@@ -20,19 +20,17 @@ Imports:
     methods,
     stats,
     stringr,
-    betareg ,
-    MASS
+    MASS,
+    dplyr,
+    betareg
 Collate:
+    'aux_functions.R'
     'data.R'
     'specifications.R'
     'models.R'
-    'AIC.R'
-    'aux_functions.R'
     'confidence.R'
     'exported_convenience_functions.R'
-    'residuals.R'
     'test.R'
     'families.R'
     'mmi.R'
-    'test_fm.R'
 Suggests: testthat

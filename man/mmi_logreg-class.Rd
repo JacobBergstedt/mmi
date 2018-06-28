@@ -4,16 +4,14 @@
 \name{mmi_logreg-class}
 \alias{mmi_logreg-class}
 \alias{.make_logreg}
-\title{S4 class for representing a logstic regression specification and a fit to that specification.}
+\title{S4 class for representing a logistic regression specification and a fit to that specification.}
 \description{
-Inherits from \code{\linkS4class{spec_logreg}}. A \code{\link[stats]{glm}} binomial
-log-link fit is added along with some additional information.
+Inherits from \code{\linkS4class{spec_logreg}} and \code{\linkS4class{mmi_model}}.
+A \code{\link[stats]{glm}} binomial logit-link fit is added to the specification object.
 }
 \section{Slots}{
 
 \describe{
 \item{\code{fit}}{The fitted \code{\link[stats]{glm}} object.}
-
-\item{\code{trt_levels}}{The names of the treatment variables given by \code{\link[stats]{glm}}}
 }}
 

@@ -4,7 +4,7 @@
 \name{ecrf}
 \alias{ecrf}
 \title{Demographical and clinical data from the article  "Natural variation in immune cell parameters is preferentially driven by genetic factors".}
-\format{An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 816 rows and 44 columns.}
+\format{An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 816 rows and 43 columns.}
 \usage{
 ecrf
 }

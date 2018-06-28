@@ -7,13 +7,5 @@
 \title{An S4 class representing a family of specifications}
 \description{
 Basically a list of specification objects. Can hold any of the specification objects.
-It's fate is to become to a fam object using make_fam(obj).
+Its fate is to become to a fam object using make_fam(obj).
 }
-\section{Slots}{
-
-\describe{
-\item{\code{responses}}{All response variables for this family.}
-
-\item{\code{treatments}}{All treatment variables for this family.}
-}}
-

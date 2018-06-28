@@ -6,14 +6,12 @@
 \alias{.make_lmm}
 \title{S4 class for representing a linear mixed model specification and a fit to that specification.}
 \description{
-Inherits from \code{\linkS4class{spec_lmm}}. Vehicle that contains a
-\code{\linkS4class{lmerMod}} fit to a model specification and some additional information.
+Inherits from \code{\linkS4class{spec_lmm}} and \code{\linkS4class{mmi_model}}.
+Contains the \code{\linkS4class{lmerMod}} that us fitted according to the specification.
 }
 \section{Slots}{
 
 \describe{
 \item{\code{fit}}{The \code{\linkS4class{lmerMod}} fit to the contained model specification.}
-
-\item{\code{trt_levels}}{The names of the treatment variables given by \code{\linkS4class{lmerMod}}}
 }}
 
