@@ -97,6 +97,12 @@ fit_model <- function(object, study_frame) {
 #' @export
 fit_model.spec_lm <- function(object, study_frame){
   # Try and see if it's better to use all.vars to copy the study_frame subset before further processing
+  # update missing values weirdness look into it
+
+  # update in fit_all_nulls will now use data that was NA for treatment variable.
+  # Consider not using update at all to be honest
+  fm <- as.formula(get_formula(object))
+  study_frame <- na.omit(study_frame[all.vars(fm)])
   if (should_transform(object@str_response_fm)) {
     study_frame[[object@response]] <- match.fun(object@trans)(study_frame[[object@response]])
   }
@@ -112,14 +118,14 @@ fit_model.spec_lm <- function(object, study_frame){
 #' and then fitting a \code{\linkS4class{lmerMod}} using the formula and the data in study_frame.
 #' @export
 fit_model.spec_lmm <- function(object, study_frame) {
+  fm <- as.formula(get_formula(object))
+  study_frame <- na.omit(study_frame[all.vars(fm)])
   if (should_transform(object@str_response_fm)) {
     study_frame[[object@response]] <- match.fun(object@trans)(study_frame[[object@response]])
   }
-  fm <- get_formula(object)
-  fit <- warn(lmer(as.formula(fm), study_frame), object, "fitting of model")
+  fit <- warn(lmer(fm, study_frame), object, "fitting of model")
   var_labels <- get_var_levels(object, fit@frame)
-  .make_lmm(object, fit = fit,
-            var_labels = var_labels)
+  .make_lmm(object, fit = fit, var_labels = var_labels)
 }
 
 #'@describeIn fit_model

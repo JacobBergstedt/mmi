@@ -82,14 +82,14 @@ fit_all_nulls.mmi_beta <- function(object, ...) {
   map(vars, f_loc)
 }
 
-fit_all_nulls.mmi_logreg <- function(object, ...) {
-  f_loc <- function(var) {
-    fm <- update(as.formula(get_formula(object)), paste(". ~ . -", var))
-    glm(fm, object@fit$model, family = "binomial")
-  }
-  vars <- unique(object@var_labels[, "variable"])
-  map(vars, f_loc)
-}
+# fit_all_nulls.mmi_logreg <- function(object, ...) {
+#   f_loc <- function(var) {
+#     fm <- update(as.formula(get_formula(object)), paste(". ~ . -", var))
+#     glm(fm, object@fit$model, family = "binomial")
+#   }
+#   vars <- unique(object@var_labels[, "variable"])
+#   map(vars, f_loc)
+# }
 
 # Coef methods ----------------------------------------------------------------------
 coef.mmi_model <- function(object) coef(object@fit)[object@var_labels[,"levels"]]

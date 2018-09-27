@@ -102,6 +102,7 @@ ft.mmi_lm <- function(object) {
 #' and sets up a tibble with the result.
 #' @export
 ft.mmi_lmm <- function(object) {
+  if (object@id == "18.09.07.12.12.53.614905_84") browser()
   nulls <- warn(fit_all_nulls(object), object, "fitting of null model")
   setup_lrt_tib(object, map_dbl(nulls, ~ KRmodcomp(object@fit, .)$stats$p.value), "ft")
 }
