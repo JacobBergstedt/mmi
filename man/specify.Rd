@@ -4,7 +4,7 @@
 \alias{specify}
 \title{Constructs a list of model specifications from formula strings.}
 \usage{
-specify(responses, treatments = NULL, controls = NULL, model,
+specify(responses, treatments = NULL, controls = character(0), model,
   trans = NULL)
 }
 \arguments{
