@@ -80,8 +80,9 @@ interacting_levels <- function(str, model_fram) {
 inv <- function(trans) {
   switch(trans,
          identity = function(x) identity(x),
+         log2 = function(x) 2 ^ x
          log = function(x) exp(x),
-         log10 = function(x) 10^x)
+         log10 = function(x) 10 ^ x)
 }
 
 is_empty <- function(x) {
