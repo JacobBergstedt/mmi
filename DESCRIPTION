@@ -1,7 +1,7 @@
 Package: mmi
 Type: Package
 Title: Multiple Model Inference
-Version: 0.2.0
+Version: 0.2.1
 Author: Jacob Bergstedt
 Maintainer: Jacob Bergstedt <jacob.bergstedt@control.lth.se>
 Description: Sets up a map-reduce pattern for looping over a list of models
