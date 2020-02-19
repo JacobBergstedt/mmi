@@ -70,6 +70,6 @@ select_confidence <- function(fam, test_tib, crit = "FDR", thresh = 0.05, level 
   test_tib <- test_tib[test_tib[[crit]] < thresh, c("response", "variable", "model_id")]
   nhits <- nrow(test_tib)
   fcr_alpha <- (1 - level) * nhits / ntot
-  confidence(fam[names(fam) %in% test_tib$model_id], level = 1 - fcr_alpha)
-  right_join(test_tib)
+  conf <- confidence(fam[names(fam) %in% test_tib$model_id], level = 1 - fcr_alpha)
+  right_join(conf, test_tib)
 }

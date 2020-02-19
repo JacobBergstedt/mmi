@@ -73,6 +73,15 @@ fit_all_nulls.mmi_model <- function(object, REML = TRUE) {
   map(vars, ~ update(object@fit, paste(". ~ . -", .)))
 }
 
+fit_all_nulls.mmi_lm <- function(object, ...) {
+  f_loc <- function(var) {
+    fm <- update(as.formula(get_formula(object)), paste(". ~ . -", var))
+    lm(fm, object@fit$model)
+  }
+  vars <- unique(object@var_labels[, "variable"])
+  map(vars, f_loc)
+}
+
 fit_all_nulls.mmi_beta <- function(object, ...) {
   f_loc <- function(var) {
     fm <- update(as.formula(get_formula(object)), paste(". ~ . -", var))
