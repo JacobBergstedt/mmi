@@ -123,3 +123,5 @@ prop_var.mmi_lmm <- function(object) {
 
 
 
+
+

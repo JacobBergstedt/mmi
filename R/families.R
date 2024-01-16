@@ -35,9 +35,10 @@ NULL
 #'@param model Distributional assumption.
 #'@param trans The pretransformation of response variables.
 #'@export
-specify <- function(responses, treatments = NULL, controls = character(0),
-                        model, trans = NULL) {
-  spec_frame <- expand.grid(response = responses, str_treatment_fm = treatments,
+specify <- function(responses, treatments = NULL, controls = character(0), model, trans = NULL) {
+
+  spec_frame <- expand.grid(response = responses,
+                            str_treatment_fm = treatments,
                             stringsAsFactors = FALSE)
   spec_fam <- vector(mode = "list", length = nrow(spec_frame))
   model_ids <- make_ids(length(spec_fam))

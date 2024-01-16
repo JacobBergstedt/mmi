@@ -1,6 +1,7 @@
 #' @export
 plot_list <- function(l, plt.ind = NULL, facet_title_size = 9, tick_label_size = 7,
                       nrow = NULL, ncol = NULL) {
+
   code_as_int <- function(x){
     level.class <- class(levels(x))
     if (is.character(level.class)) {
