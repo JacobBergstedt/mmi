@@ -66,6 +66,7 @@ select_confidence <- function(fam, test_tib, crit = "FDR", thresh = 0.05, level 
   if (!class(fam) == "fam") stop("fam parameter must be a fam object")
   if (!crit %in% names(test_tib)) stop("crit not a name in test_tib")
   if (is.null(names(fam))) stop("This function currently only works for named families")
+  if (all(test_tib[[crit]] > thresh)) {stop("No significant parameters; use function confidence to get results for parameters irrespective of significance")}
   ntot <- nrow(test_tib)
   test_tib <- test_tib[test_tib[[crit]] < thresh, c("response", "variable", "model_id")]
   nhits <- nrow(test_tib)

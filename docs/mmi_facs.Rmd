@@ -155,7 +155,7 @@ response_counts[1:5]
 ```{r, message = FALSE, warning = FALSE, fig.align = 'center'}
 
 controls_mfis <- "HourOfSampling + Sex + Age + (1|DayOfSampling)"
-controls_counts <- "HourOfSampling + Sex + Age + CMVPositiveSerology + (1|DayOfSampling)"
+controls_counts <- "HourOfSampling + Sex + Age + (1|DayOfSampling) + CMVPositiveSerology"
 
 # Define treatmets
 str_treatments <- names(ecrf)
