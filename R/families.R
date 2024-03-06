@@ -152,7 +152,7 @@ c.fam <- function(...) {
 #' @export
 `[.spec_fam` <- function(x, idx, ...) {
   if (is.character(idx)) {
-    if (!idx %in% names(x)) stop("The fam object doesn't have those names")
+    if (!all(idx %in% names(x))) stop("The fam object doesn't have those names")
     new_sfam <- x@.Data[x@names %in% idx]
     names <- idx
   } else {
